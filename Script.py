@@ -405,7 +405,7 @@ This Is An Open-Source Project. You Can Use It Freely, But Selling The Source Co
       ᴊᴏɪɴ ʙᴏᴛʜ sᴇᴀʀᴄʜ ɢʀᴏᴜᴘs
 ╰───────────────────⍟ </b> </a>\n """
     
-   CHANNEL_TXT =="""╭──────[ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs ]─────⍟
+   CHANNEL_TXT =="""</b>╭──────[ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs ]─────⍟
       ᴊᴏɪɴ ʙᴏᴛʜ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs
 ╰───────────────────⍟ </b> </a>\n"""
 
