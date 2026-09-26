@@ -1593,9 +1593,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
     
     elif query.data == "channel":
         buttons = [[
-            InlineKeyboardButton('UPDATE CHANNEL ִֶָ.🔄', url='https://t.me/roaroic1'),
-            InlineKeyboardButton('MAIN CHANNEL ִֶָ.🍿', url='https://t.me/roaroic0'),
-            InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
+            InlineKeyboardButton('UPDATE CHANNEL ִֶָ🔄', url='https://t.me/roaroic1'),
+            InlineKeyboardButton('MAIN CHANNEL ִֶָ🍿', url='https://t.me/roaroic0') 
+        ], [ InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
