@@ -407,7 +407,7 @@ This Is An Open-Source Project. You Can Use It Freely, But Selling The Source Co
     
    CHANNEL_TXT =="""╭──────[ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs ]─────⍟
       ᴊᴏɪɴ ʙᴏᴛʜ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs
-╰───────────────────⍟"""
+╰───────────────────⍟ </b> </a>\n"""
 
     SETTING_TXT = """    
 <u>ꜱᴇᴛᴛɪɴɢꜱ</u> :
