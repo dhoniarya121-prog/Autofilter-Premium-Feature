@@ -401,13 +401,13 @@ sʜᴏᴡɴ ɪɴ : {remaining_seconds} <i>sᴇᴄ</i>⚡️
 This Is An Open-Source Project. You Can Use It Freely, But Selling The Source Code Is Strictly Prohibited.\n
 ꜱᴏᴜʀᴄᴇ ᴄᴏᴅᴇ ʜᴇʀᴇ ◉› \n """
    
-    GROUP_TXT ="""╭──────[ sᴇᴀʀᴄʜ ɢʀᴏᴜᴘs ]─────⍟
+    GROUP_TXT ="""<b>╭──────[ sᴇᴀʀᴄʜ ɢʀᴏᴜᴘs ]─────⍟
       ᴊᴏɪɴ ʙᴏᴛʜ sᴇᴀʀᴄʜ ɢʀᴏᴜᴘs
-╰───────────────────⍟\n """
+╰───────────────────⍟</b>\n """
 
-    CHANNEL_TXT ="""╭──────[ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs ]─────⍟
+    CHANNEL_TXT ="""<b>╭──────[ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs ]─────⍟
       ᴊᴏɪɴ ʙᴏᴛʜ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs
-╰───────────────────⍟\n"""
+╰───────────────────⍟</b>\n"""
 
 
     SETTING_TXT = """    
