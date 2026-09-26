@@ -404,10 +404,7 @@ This Is An Open-Source Project. You Can Use It Freely, But Selling The Source Co
     GROUP_TXT ="""╭──────[ sᴇᴀʀᴄʜ ɢʀᴏᴜᴘs ]─────⍟
       ᴊᴏɪɴ ʙᴏᴛʜ sᴇᴀʀᴄʜ ɢʀᴏᴜᴘs
 ╰───────────────────⍟ </b> </a>\n """
-    
-   CHANNEL_TXT =="""</b>╭──────[ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs ]─────⍟
-      ᴊᴏɪɴ ʙᴏᴛʜ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs
-╰───────────────────⍟ </b> </a>\n"""
+
 
     SETTING_TXT = """    
 <u>ꜱᴇᴛᴛɪɴɢꜱ</u> :
