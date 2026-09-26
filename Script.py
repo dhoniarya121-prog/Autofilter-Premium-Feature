@@ -1,7 +1,7 @@
 class script(object):
     START_TXT = """<b>👋 ʜᴇʏ {}, {}</b>
 
-<b>😃  ɪ ᴀᴍ <a href=https://t.me/{}>{}</a>,
+<b>😃  ɪ ᴀᴍ <a href="https://t.me/{}">{}</a>,
 ʏᴏᴜʀ ᴅᴀɪʟʏ ᴇɴᴛᴇʀᴛᴀɪɴᴍᴇɴᴛ ᴅᴇsᴛɪɴᴀᴛɪᴏɴ,ɪ ᴄᴀɴ ʜᴇʟᴘ ʏᴏᴜ ꜰɪɴᴅ ʏᴏᴜʀ ᴄᴏɴᴛᴇɴᴛ,ᴊᴜsᴛ sᴇɴᴅ ᴍᴇ ᴛʜᴇ ɴᴀᴍᴇ ᴏꜰ ʏᴏᴜʀ ᴄᴏɴᴛᴇɴᴛ
 ᴀɴᴅ sᴇᴇ ᴛʜᴇ ᴍᴀɢɪᴄ ✨️</b>
 """
@@ -11,7 +11,7 @@ class script(object):
 
 <b>ʜᴇʏ {},</b>
 
-<b>🤖 ɪ ᴀᴍ <a href=https://t.me/{}>{}</a>, ᴛʜᴇ ᴍᴏꜱᴛ ᴘᴏᴡᴇʀꜰᴜʟ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ʙᴏᴛ ᴡɪᴛʜ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇꜱ.</b>"""
+<b>🤖 ɪ ᴀᴍ <a href="https://t.me/{}">{}</a>, ᴛʜᴇ ᴍᴏꜱᴛ ᴘᴏᴡᴇʀꜰᴜʟ ᴀᴜᴛᴏ ꜰɪʟᴛᴇʀ ʙᴏᴛ ᴡɪᴛʜ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇꜱ.</b>"""
 
     
     HELP_TXT = """<b>
@@ -225,7 +225,7 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 
     
     MOVIE_UPDATE_NOTIFY_TXT = """
-</b><a href={poster_url}>📥</a><a href={imdb_url}>New {tag} Added</a></b>
+<a href="{poster_url}">📥</a> <a href="{imdb_url}">New {tag} Added</a>
 
 <blockquote>✨ ᴛɪᴛʟᴇ : <code>{filename}</code>
 
@@ -243,9 +243,9 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 """
 
 
-    IMDB_TEMPLATE_TXT = """<b><a href={url}>{title} (<a href={url}/releaseinfo>{year}</a>)
+    IMDB_TEMPLATE_TXT = """<b><a href="{url}">{title}</a> (<a href="{url}/releaseinfo">{year}</a>)
 
-ʀᴀᴛɪɴɢ : <a href={url}/ratings>{rating}</a>
+ʀᴀᴛɪɴɢ : <a href="{url}/ratings">{rating}</a>
 ɢᴇɴʀᴇ : {genres}
 ᴀᴜᴅɪᴏ : {languages}
 
@@ -403,11 +403,12 @@ This Is An Open-Source Project. You Can Use It Freely, But Selling The Source Co
    
     GROUP_TXT ="""╭──────[ sᴇᴀʀᴄʜ ɢʀᴏᴜᴘs ]─────⍟
       ᴊᴏɪɴ ʙᴏᴛʜ sᴇᴀʀᴄʜ ɢʀᴏᴜᴘs
-╰───────────────────⍟ </b> </a>\n """
-        
-   CHANNEL_TXT ="""</b>╭──────[ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs ]─────⍟
+╰───────────────────⍟\n """
+
+    CHANNEL_TXT ="""╭──────[ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs ]─────⍟
       ᴊᴏɪɴ ʙᴏᴛʜ ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟs
-╰───────────────────⍟ </b> </a>\n"""
+╰───────────────────⍟\n"""
+
 
     SETTING_TXT = """    
 <u>ꜱᴇᴛᴛɪɴɢꜱ</u> :
@@ -461,7 +462,7 @@ This Is An Open-Source Project. You Can Use It Freely, But Selling The Source Co
 
     THIRDT_VERIFICATION_TEXT = """<b><i>👋 ʜᴇʏ {},
     
-📌 ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪꜰɪᴇᴅ, ᴛᴀᴘ ᴏɴ ᴛʜᴇ ᴠᴇʀɪꜰʏ ʟɪɴᴋ & ɢᴇᴛ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss ꜰᴏʀ ɴᴇxᴛ ꜰᴜʟʟ ᴅᴀʏ.</u>
+📌 ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪꜰɪᴇᴅ, ᴛᴀᴘ ᴏɴ ᴛʜᴇ ᴠᴇʀɪꜰʏ ʟɪɴᴋ & ɢᴇᴛ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss ꜰᴏʀ ɴᴇxᴛ ꜰᴜʟʟ ᴅᴀʏ.
 
 #ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ:- 3/3 ✓
 
