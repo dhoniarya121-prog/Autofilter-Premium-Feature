@@ -46,10 +46,10 @@ CHANNELS = [int(ch) if id_pattern.search(ch) else ch for ch in environ.get('CHAN
 
 LOG_CHANNEL = int(environ.get('LOG_CHANNEL', '-1004379059015'))  # Log channel id (make sure bot is admin)
 BIN_CHANNEL = int(environ.get('BIN_CHANNEL', '-1001553577227'))  # Bin channel id (make sure bot is admin)
-PREMIUM_LOGS = int(environ.get('PREMIUM_LOGS', '-100'))  # Premium logs channel id
+PREMIUM_LOGS = int(environ.get('PREMIUM_LOGS', '-1004379059015'))  # Premium logs channel id
 DELETE_CHANNELS = [int(dch) if id_pattern.search(dch) else dch for dch in environ.get('DELETE_CHANNELS', '-100').split()] #(make sure bot is admin)
-support_chat_id = environ.get('SUPPORT_CHAT_ID', '-100')  # Support group id (make sure bot is admin)
-reqst_channel = environ.get('REQST_CHANNEL_ID', '-100')  # Request channel id (make sure bot is admin)
+support_chat_id = environ.get('SUPPORT_CHAT_ID', '-1004339431482')  # Support group id (make sure bot is admin)
+reqst_channel = environ.get('REQST_CHANNEL_ID', '-1004476058811')  # Request channel id (make sure bot is admin)
 SUPPORT_CHAT = environ.get('SUPPORT_CHAT', 'https://t.me/roaroic_bot')  # Support group link (make sure bot is admin)
 
 # FORCE_SUB 
@@ -96,8 +96,8 @@ LANDSCAPE_POSTER = bool(environ.get('LANDSCAPE_POSTER', True)) # Shows landscape
 # Verification Settings
 # ============================
 IS_VERIFY = is_enabled(environ.get('IS_VERIFY', 'True'), True)  # Verification On (True) / Off (False)
-LOG_VR_CHANNEL = int(environ.get('LOG_VR_CHANNEL', '-100')) #Verification Channel Id 
-LOG_API_CHANNEL = int(environ.get('LOG_API_CHANNEL', '-100')) #If Anyone Set Your Bot In Any Group And Set Shortner In That Group Then In This Channel The All Details Come
+LOG_VR_CHANNEL = int(environ.get('LOG_VR_CHANNEL', '-1004379059015')) #Verification Channel Id 
+LOG_API_CHANNEL = int(environ.get('LOG_API_CHANNEL', '-1004379059015')) #If Anyone Set Your Bot In Any Group And Set Shortner In That Group Then In This Channel The All Details Come
 VERIFY_IMG = environ.get("VERIFY_IMG", "https://telegra.ph/file/9ecc5d6e4df5b83424896.jpg")
 
 TUTORIAL = environ.get("TUTORIAL", "https://t.me/roaroicgroup")   # Tutorial link for verification
@@ -105,14 +105,14 @@ TUTORIAL_2 = environ.get("TUTORIAL_2", "https://t.me/roaroic1")   # Second tutor
 TUTORIAL_3 = environ.get("TUTORIAL_3", "https://t.me/roaroic1")   # Third tutorial link for verification
 
 # Verification (Must Fill All Veriables. Else You Got Error
-SHORTENER_API = environ.get("SHORTENER_API", "2469484d258897da1dc9edaf4face6f466301f39") # Shortener API key
+pSHORTENER_API = environ.get("SHORTENER_API", "2469484d258897da1dc9edaf4face6f466301f39") # Shortener API key
 SHORTENER_WEBSITE = environ.get("SHORTENER_WEBSITE", "https://api.gplinks.com") # Shortener website
 
-SHORTENER_API2 = environ.get("SHORTENER_API2", "yei5ei5eie6id6d")  # Shortener API key for second website
-SHORTENER_WEBSITE2 = environ.get("SHORTENER_WEBSITE2", "Shortner_Website_Url") # Shortener website for second website
+SHORTENER_API2 = environ.get("SHORTENER_API2", "2469484d258897da1dc9edaf4face6f466301f39")  # Shortener API key for second website
+SHORTENER_WEBSITE2 = environ.get("SHORTENER_WEBSITE2", "https://api.gplinks.com") # Shortener website for second website
 
-SHORTENER_API3 = environ.get("SHORTENER_API3", "5353e68e866ee")  
-SHORTENER_WEBSITE3 = environ.get("SHORTENER_WEBSITE3", "Shortner_Website_Url") # Shortener website for third website
+SHORTENER_API3 = environ.get("SHORTENER_API3", "2469484d258897da1dc9edaf4face6f466301f39")  
+SHORTENER_WEBSITE3 = environ.get("SHORTENER_WEBSITE3", "https://api.gplinks.com") # Shortener website for third website
 
 TWO_VERIFY_GAP = int(environ.get('TWO_VERIFY_GAP', "1200")) # Time gap for two-step verification in seconds (default: 20 minutes)
 THREE_VERIFY_GAP = int(environ.get('THREE_VERIFY_GAP', "54000"))    
@@ -121,7 +121,7 @@ THREE_VERIFY_GAP = int(environ.get('THREE_VERIFY_GAP', "54000"))
 # Channel & Group Links Configuration
 # ============================
 GRP_LNK = environ.get('GRP_LNK', 'https://t.me/roaroicgroup') # Group link for the bot
-OWNER_LNK = environ.get('OWNER_LNK', 'https://t.me/roaroic') # Owner link for the bot
+OWNER_LNK = environ.get('OWNER_LNK', 'https://t.me/roaroic0') # Owner link for the bot
 UPDATE_CHNL_LNK = environ.get('UPDATE_CHNL_LNK', 'https://t.me/roaroic1') # Update channel link for the bot
 
 # ============================
@@ -143,7 +143,7 @@ DELETE_TIME = int(environ.get("DELETE_TIME", "180"))  #  deletion time in second
 CUSTOM_FILE_CAPTION = environ.get("CUSTOM_FILE_CAPTION", f"{script.CAPTION}")   # Custom caption for files
 BATCH_FILE_CAPTION = environ.get("BATCH_FILE_CAPTION", CUSTOM_FILE_CAPTION) # Custom caption for batch files
 IMDB_TEMPLATE = environ.get("IMDB_TEMPLATE", f"{script.IMDB_TEMPLATE_TXT}")     # Custom IMDB template 
-MAX_LIST_ELM = environ.get("MAX_LIST_ELM", None) # Maximum number of elements in a list (default: None, no limit)
+MAX_LIST_ELM = environ.get("MAX_LIST_ELM", No limit) # Maximum number of elements in a list (default: None, no limit)
 INDEX_REQ_CHANNEL = int(environ.get('INDEX_REQ_CHANNEL', LOG_CHANNEL))  # Index Request Channel ID (make sure bot is admin)
 NO_RESULTS_MSG = bool(environ.get("NO_RESULTS_MSG", True))  # True if you want no results messages in Log Channel
 MAX_BTN = is_enabled((environ.get('MAX_BTN', "True")), True)    # Max Button On (True) / Off (False)
@@ -203,14 +203,14 @@ BAD_WORDS = {
 # Server & Web Configuration
 # ============================
 
-NO_PORT = bool(environ.get('24', True))
+NO_PORT = bool(environ.get('NO_PORT', True))
 APP_NAME = None
 if 'DYNO' in environ:
     ON_HEROKU = True
     APP_NAME = environ.get('APP_NAME')
 else:
     ON_HEROKU = False
-BIND_ADRESS = str(getenv('WEB_SERVER_BIND_ADDRESS', '74.220.49.0'))
+BIND_ADRESS = str(getenv('WEB_SERVER_BIND_ADDRESS', '74.220.49.0/24'))
 FQDN = str(getenv('FQDN', BIND_ADRESS)) if not ON_HEROKU or getenv('FQDN') else APP_NAME+'.herokuapp.com'
 URL = "https://{}/".format(FQDN) if ON_HEROKU or NO_PORT else "https://{}/".format(FQDN, PORT)
 SLEEP_THRESHOLD = int(environ.get('SLEEP_THRESHOLD', '60'))
