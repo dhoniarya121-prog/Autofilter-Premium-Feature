@@ -108,11 +108,11 @@ TUTORIAL_3 = environ.get("TUTORIAL_3", "https://t.me/roaroic1")   # Third tutori
 SHORTENER_API = environ.get("SHORTENER_API", "dee070f2ac98ba7116d932d663b9c7478b9aa989") # Shortener API key
 SHORTENER_WEBSITE = environ.get("SHORTENER_WEBSITE", "v2links.com") # Shortener website
 
-SHORTENER_API2 = environ.get("SHORTENER_API2", "1e72bd1274625811043cb1d1ca2dbcbe77e9fdd2")  # Shortener API key for second website
-SHORTENER_WEBSITE2 = environ.get("SHORTENER_WEBSITE2", "vplink.in") # Shortener website for second website
+SHORTENER_API2 = environ.get("SHORTENER_API2", "dee070f2ac98ba7116d932d663b9c7478b9aa989")  # Shortener API key for second website
+SHORTENER_WEBSITE2 = environ.get("SHORTENER_WEBSITE2", "v2link.com") # Shortener website for second website
 
-SHORTENER_API3 = environ.get("SHORTENER_API3", "9de92146ce8c176d3d42dc80b876d2c4499bec89")  
-SHORTENER_WEBSITE3 = environ.get("SHORTENER_WEBSITE3", "arolinks.com") # Shortener website for third website
+SHORTENER_API3 = environ.get("SHORTENER_API3", "dee070f2ac98ba7116d932d663b9c7478b9aa989")  
+SHORTENER_WEBSITE3 = environ.get("SHORTENER_WEBSITE3", "v2links.com") # Shortener website for third website
 
 TWO_VERIFY_GAP = int(environ.get('TWO_VERIFY_GAP', "1200")) # Time gap for two-step verification in seconds (default: 20 minutes)
 THREE_VERIFY_GAP = int(environ.get('THREE_VERIFY_GAP', "54000"))    
@@ -134,7 +134,7 @@ PREMIUM_USER = [int(user) if id_pattern.search(user) else user for user in envir
 # ============================
 # Miscellaneous Configuration
 # ============================
-ULTRA_FAST_MODE = is_enabled(environ.get('ULTRA_FAST_MODE', "False"), True) # Set to True for fast search, False for original search
+ULTRA_FAST_MODE = is_enabled(environ.get('ULTRA_FAST_MODE', "True"), True) # Set to True for fast search, False for original search
 
 MAX_B_TN = environ.get("MAX_B_TN", "5") # Maximum number of buttons in a row (default: 5)
 PORT = int(environ.get("PORT", "0.0.0.0"))  # Port for the web server (default: 8080)
@@ -210,7 +210,7 @@ if 'DYNO' in environ:
     APP_NAME = environ.get('APP_NAME')
 else:
     ON_HEROKU = False
-BIND_ADRESS = str(getenv('WEB_SERVER_BIND_ADDRESS', 'autofilter-premium-feature-1-ncz4.onrender.com'))
+BIND_ADRESS = str(getenv('WEB_SERVER_BIND_ADDRESS', 'roaroic.onrender.com'))
 FQDN = str(getenv('FQDN', BIND_ADRESS)) if not ON_HEROKU or getenv('FQDN') else APP_NAME+'.herokuapp.com'
 URL = "https://{}/".format(FQDN) if ON_HEROKU or NO_PORT else "https://{}/".format(FQDN, PORT)
 SLEEP_THRESHOLD = int(environ.get('SLEEP_THRESHOLD', '60'))
