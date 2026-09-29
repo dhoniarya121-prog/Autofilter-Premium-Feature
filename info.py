@@ -75,7 +75,7 @@ STAR_PREMIUM_PLANS = {
 # ============================
 DATABASE_URI = environ.get('DATABASE_URI', "mongodb+srv://one2yadavv_db_user:vevaOVyOk7uGoEQM@roaoric.ckkknpy.mongodb.net/?appName=roaoric")  # MongoDB URI for the database
 DATABASE_NAME = environ.get('DATABASE_NAME', "roaoric") # Database name (default: cluster)
-COLLECTION_NAME = environ.get('COLLECTION_NAME', 'royal_files') # Collection name (default: dreamcinezone_files)
+COLLECTION_NAME = environ.get('COLLECTION_NAME', 'HIDE') # Collection name (default: dreamcinezone_files)
 
 # If MULTIPLE_DB Is True Then Fill DATABASE_URI2 Value Else You Will Get Error.
 MULTIPLE_DB = is_enabled(os.environ.get('MULTIPLE_DB', "False"), False) # Type True For Turn On MULTIPLE DB FUNTION 
@@ -114,6 +114,7 @@ SHORTENER_WEBSITE2 = environ.get("SHORTENER_WEBSITE2", "arolinks.com") # Shorten
 SHORTENER_API3 = environ.get("SHORTENER_API3", "9de92146ce8c176d3d42dc80b876d2c4499bec89")  
 SHORTENER_WEBSITE3 = environ.get("SHORTENER_WEBSITE3", "arolinks.com") # Shortener website for third website
 
+ONE_VERIFY_GAP = int(environ.get('ONE_VERIFY_GAP', "300"))
 TWO_VERIFY_GAP = int(environ.get('TWO_VERIFY_GAP', "1200")) # Time gap for two-step verification in seconds (default: 20 minutes)
 THREE_VERIFY_GAP = int(environ.get('THREE_VERIFY_GAP', "54000"))    
 
