@@ -1448,13 +1448,14 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
     elif query.data == "start":
         buttons = [[
-                    InlineKeyboardButton('🔰 ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ 🔰', url=f'http://telegram.me/{temp.U_NAME}?startgroup=true')
+                    InlineKeyboardButton(' ⌣🍒ᴄʜᴀɴɴᴇʟs ', callback_data='channel'),
+                    InlineKeyboardButton(' 🔍ɢʀᴏᴜᴘ ', callback_data='ɢʀᴏᴜᴘ'),
                 ],[
-                    InlineKeyboardButton(' ʜᴇʟᴘ 📢', callback_data='help'),
-                    InlineKeyboardButton(' ᴀʙᴏᴜᴛ 📖', callback_data='about')
+                    InlineKeyboardButton(' ʜᴇʟᴘ 😎', callback_data='help'),
+                    InlineKeyboardButton(' ᴀʙᴏᴜᴛ ᴍᴇ 📖', callback_data='about')
                 ],[
-                    InlineKeyboardButton('ᴛᴏᴘ sᴇᴀʀᴄʜɪɴɢ ⭐', callback_data="topsearch"),
-                     InlineKeyboardButton('ᴜᴘɢʀᴀᴅᴇ 🎟', callback_data="premium_info"),
+                    InlineKeyboardButton('ᴛᴀʀɴᴅɪɴɢ ⭐', callback_data="topsearch"),
+                     InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
                 ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         current_time = datetime.now(pytz.timezone(TIMEZONE))
@@ -1514,7 +1515,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-
+    
     elif query.data == "about":
         buttons = [[
             InlineKeyboardButton('‼️ ᴅɪꜱᴄʟᴀɪᴍᴇʀ ‼️', callback_data='disclaimer'),
@@ -1568,12 +1569,37 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
     elif query.data == "source":
         buttons = [[
-            InlineKeyboardButton('Source Code 📜', url='https://t.me/royalkrrishna'),
+            InlineKeyboardButton('ADMIN📜', url='https://t.me/roaroic0'),
             InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
             text=script.SOURCE_TXT,
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
+        )
+
+    elif query.data == "ɢʀᴏᴜᴘ":
+        buttons = [[
+            InlineKeyboardButton('SEARCH GROUP 🏢', url='https://t.me/roaroicgroup'),
+            InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
+        ]]
+        reply_markup = InlineKeyboardMarkup(buttons)
+        await query.message.edit_text(
+            text=script.GROUP_TXT,
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
+        ) 
+    
+    elif query.data == "channel":
+        buttons = [[
+            InlineKeyboardButton('UPDATE CHANNEL ִֶָ🔄', url='https://t.me/roaroic1'),
+            InlineKeyboardButton('MAIN CHANNEL ִֶָ🍿', url='https://t.me/roaroic0') 
+        ], [ InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
+        ]]
+        reply_markup = InlineKeyboardMarkup(buttons)
+        await query.message.edit_text(
+            text=script.CHANNEL_TXT,
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
