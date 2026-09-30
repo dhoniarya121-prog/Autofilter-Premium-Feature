@@ -19,6 +19,11 @@ def env_bool(name, default):
     """Read a boolean env var. (bool("False") is True in Python, so never use bool() on env strings.)"""
     return is_enabled(environ.get(name, str(default)), default)
 
+def env_str(name, default):
+    """Read a string env var; a missing OR blank value falls back to the default."""
+    value = environ.get(name, "").strip()
+    return value if value else default
+
 def env_int(name, default):
     """Read an int env var; empty/missing -> default, garbage -> clear error."""
     value = environ.get(name, "").strip()
@@ -36,7 +41,7 @@ def parse_ids(value):
 # ============================
 # Bot Information Configuration
 # ============================
-SESSION = environ.get('SESSION', 'royal_search')   # Session name for the bot
+SESSION = env_str('SESSION', 'royal_search')   # Session name for the bot
 API_ID = env_int('API_ID', 0) # API ID from my.telegram.org
 API_HASH = environ.get('API_HASH', '')  # API Hash from my.telegram.org
 BOT_TOKEN = environ.get('BOT_TOKEN', "")    # Bot token from @BotFather
@@ -93,8 +98,8 @@ STAR_PREMIUM_PLANS = {
 # MongoDB Configuration
 # ============================
 DATABASE_URI = environ.get('DATABASE_URI', "")  # MongoDB URI for the database
-DATABASE_NAME = environ.get('DATABASE_NAME', "Cluster0") # Database name (default: cluster)
-COLLECTION_NAME = environ.get('COLLECTION_NAME', 'SERIAL PRODCAST...') # Collection name (default: dreamcinezone_files)
+DATABASE_NAME = env_str('DATABASE_NAME', "Cluster0") # Database name (default: cluster)
+COLLECTION_NAME = env_str('COLLECTION_NAME', 'SERIAL PRODCAST...') # Collection name (default: dreamcinezone_files)
 
 # If MULTIPLE_DB Is True Then Fill DATABASE_URI2 Value Else You Will Get Error.
 MULTIPLE_DB = env_bool('MULTIPLE_DB', False) # Type True For Turn On MULTIPLE DB FUNTION 
@@ -236,7 +241,7 @@ HAS_SSL = env_bool('HAS_SSL', True)
 URL = "{}://{}/".format("https" if HAS_SSL else "http", FQDN)
 SLEEP_THRESHOLD = env_int('SLEEP_THRESHOLD', 60)
 WORKERS = env_int('WORKERS', 4)
-SESSION_NAME = str(environ.get('SESSION_NAME', 'dreamXBotz'))
+SESSION_NAME = env_str('SESSION_NAME', 'dreamXBotz')
 MULTI_CLIENT = False
 name = str(environ.get('name', 'DREAMXBOTZ'))
 PING_INTERVAL = env_int('PING_INTERVAL', 1200)  # 20 minutes
