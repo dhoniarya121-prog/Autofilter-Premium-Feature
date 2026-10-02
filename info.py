@@ -212,7 +212,8 @@ else:
     ON_HEROKU = False
 BIND_ADRESS = str(getenv('WEB_SERVER_BIND_ADDRESS', 'kingo-q8hw.onrender.com'))
 FQDN = str(getenv('kingo-q8hw.onrender.com', BIND_ADRESS)) if not ON_HEROKU or getenv('kingo-q8hw.onrender.com') else APP_NAME+'.herokuapp.com'
-URL = "https://{}/".format(FQDN) if ON_HEROKU or NO_PORT else "https://{}/".format(FQDN, PORT)
+URL = "https://{}/".format(FQDN) if ON_HEROKU or NO_PORT else \
+    "https://{}:{}/".format(FQDN, PORT)
 SLEEP_THRESHOLD = int(environ.get('SLEEP_THRESHOLD', '60'))
 WORKERS = int(environ.get('WORKERS', '4'))
 SESSION_NAME = str(environ.get('SESSION_NAME', 'dreamXBotz'))
@@ -224,7 +225,7 @@ if 'DYNO' in environ:
     APP_NAME = str(getenv('APP_NAME'))
 else:
     ON_HEROKU = False
-HAS_SSL = bool(getenv('HAS_SSL', True))
+HAS_SSL = is_enabled(getenv('HAS_SSL', 'False'), False)
 if HAS_SSL:
     URL = "https://{}/".format(FQDN)
 else:
