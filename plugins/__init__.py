@@ -18,10 +18,19 @@ async def web_server():
 
 async def check_expired_premium(client):
     while 1:
-        data = await db.get_expired(datetime.now())
+        try:
+            data = await db.get_expired(datetime.now())
+        except Exception as e:
+            logging.error(f"check_expired_premium DB error: {e}")
+            await sleep(15)
+            continue
         for user in data:
             user_id = user["id"]
-            await db.remove_premium_access(user_id)
+            try:
+                await db.remove_premium_access(user_id)
+            except Exception as e:
+                logging.error(f"remove_premium_access failed for {user_id}: {e}")
+                continue
             try:
                 user = await client.get_users(user_id)
                 await client.send_message(
@@ -32,7 +41,7 @@ async def check_expired_premium(client):
             except Exception as e:
                 print(e)
             await sleep(0.5)
-        await sleep(1)
+        await sleep(5)
 
 async def keep_alive():
     """Keep bot alive by sending periodic pings."""
