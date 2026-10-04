@@ -54,6 +54,8 @@ async def start(client, message):
     if len(m.command) == 2 and m.command[1].startswith(('notcopy', 'sendall')):
         _, userid, verify_id, file_id = m.command[1].split("_", 3)
         user_id = int(userid)
+        if message.from_user.id != user_id:
+            return await message.reply("<b>❌ ᴛʜɪs ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ʟɪɴᴋ ɪs ɴᴏᴛ ꜰᴏʀ ʏᴏᴜ. ᴘʟᴇᴀsᴇ ʀᴇǫᴜᴇsᴛ ᴛʜᴇ ꜰɪʟᴇ ʏᴏᴜʀsᴇʟꜰ.</b>", parse_mode=enums.ParseMode.HTML)
         verify_id_info = await db.get_verify_id_info(user_id, verify_id)
         if not verify_id_info or verify_id_info["verified"]:
             return await message.reply("<b>⏳ ʟɪɴᴋ ᴇxᴘɪʀᴇᴅ — ᴘʟᴇᴀsᴇ ʀᴇǫᴜᴇsᴛ ᴛʜᴇ ꜰɪʟᴇ ᴀɢᴀɪɴ.</b>", parse_mode=enums.ParseMode.HTML)
@@ -366,13 +368,18 @@ async def start(client, message):
                     reply_markup=reply_markup,
                     parse_mode=enums.ParseMode.HTML
                 )
-                await asyncio.sleep(300) 
-                await n.delete()
-                await m.delete()
+                asyncio.create_task(_delete_later(n, 300))
+                asyncio.create_task(_delete_later(m, 300))
                 return
         except Exception as e:
-            print(f"Error In Verification - {e}")
-            pass
+            # FAIL CLOSED: never hand out the file if the verification step itself broke
+            logger.error(f"Error In Verification - {e!r}")
+            try:
+                await log_error(client, f"❗️ Verification Error:\n\n{e!r}")
+            except Exception:
+                pass
+            await m.reply_text("<b>⚠️ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ꜱᴇʀᴠɪᴄᴇ ɪꜱ ᴛᴇᴍᴘᴏʀᴀʀɪʟʏ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ. ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ ɪɴ ᴀ ꜰᴇᴡ ᴍɪɴᴜᴛᴇꜱ.</b>", parse_mode=enums.ParseMode.HTML)
+            return
 
     # Daily file limit (non-premium only; Premium = unlimited)
     if not is_premium and FREE_DAILY_LIMIT > 0:
