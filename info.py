@@ -19,7 +19,7 @@ def is_enabled(value, default):
 # Bot Information Configuration
 # ============================
 SESSION = environ.get('SESSION', 'royal_search')   # Session name for the bot
-API_ID = int(environ.get('API_ID', '')) # API ID from my.telegram.org
+API_ID = int(environ.get('API_ID', '0')) # API ID from my.telegram.org
 API_HASH = environ.get('API_HASH', '')  # API Hash from my.telegram.org
 BOT_TOKEN = environ.get('BOT_TOKEN', "")    # Bot token from @BotFather
 
@@ -48,9 +48,9 @@ FSUB_PICS = (environ.get('FSUB_PICS', 'https://graph.org/file/7478ff3eac37f4329c
 ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in environ.get('ADMINS', '').split()] # Replace with the actual admin ID(s) to add
 CHANNELS = [int(ch) if id_pattern.search(ch) else ch for ch in environ.get('CHANNELS', '-1001553577227').split()]  # Channel id for auto indexing (make sure bot is admin)
 
-LOG_CHANNEL = int(environ.get('LOG_CHANNEL', '-100'))  # Log channel id (make sure bot is admin)
-BIN_CHANNEL = int(environ.get('BIN_CHANNEL', '-100'))  # Bin channel id (make sure bot is admin)
-PREMIUM_LOGS = int(environ.get('PREMIUM_LOGS', '-1004379059015'))  # Premium logs channel id
+LOG_CHANNEL = int(environ.get('LOG_CHANNEL', '0'))  # Log channel id (make sure bot is admin)
+BIN_CHANNEL = int(environ.get('BIN_CHANNEL', '0'))  # Bin channel id (make sure bot is admin)
+PREMIUM_LOGS = int(environ.get('PREMIUM_LOGS', '0'))  # Premium logs channel id
 DELETE_CHANNELS = [int(dch) if id_pattern.search(dch) else dch for dch in environ.get('DELETE_CHANNELS', '-100').split()] #(make sure bot is admin)
 support_chat_id = environ.get('SUPPORT_CHAT_ID', '-5364188210')  # Support group id (make sure bot is admin)
 reqst_channel = environ.get('REQST_CHANNEL_ID', '-100')  # Request channel id (make sure bot is admin)
@@ -77,7 +77,7 @@ STAR_PREMIUM_PLANS = {
 # ============================
 # MongoDB Configuration
 # ============================
-DATABASE_URI = environ.get('DATABASE_URI', "")  # MongoDB URI for the database
+DATABASE_URI = environ.get('DATABASE_URI', 'mongodb://127.0.0.1:27017')  # MongoDB URI for the database
 DATABASE_NAME = environ.get('DATABASE_NAME', "Cluster0") # Database name (default: cluster)
 COLLECTION_NAME = environ.get('COLLECTION_NAME', 'royal_files') # Collection name (default: dreamcinezone_files)
 
@@ -88,7 +88,7 @@ DATABASE_URI2 = environ.get('DATABASE_URI2', "")  # MongoDB URI for the second d
 # Movie Notification & Update Settings
 # ============================
 MOVIE_UPDATE_NOTIFICATION = is_enabled(str(environ.get('MOVIE_UPDATE_NOTIFICATION', True)), True)  # Notification On (True) / Off (False)
-MOVIE_UPDATE_CHANNEL = int(environ.get('MOVIE_UPDATE_CHANNEL', '-1003900854538'))  # Notification of sent to your channel
+MOVIE_UPDATE_CHANNEL = int(environ.get('MOVIE_UPDATE_CHANNEL', '0'))  # Notification of sent to your channel
 DREAMXBOTZ_IMAGE_FETCH = is_enabled(str(environ.get('DREAMXBOTZ_IMAGE_FETCH', True)), True)  # On (True) / Off (False)
 LINK_PREVIEW = is_enabled(str(environ.get('LINK_PREVIEW', True)), True) # Shows link preview in notification msg instead of image
 ABOVE_PREVIEW = is_enabled(str(environ.get('ABOVE_PREVIEW', True)), True) # Shows link preview above the text in notification msg if True else below the msg
@@ -100,8 +100,8 @@ LANDSCAPE_POSTER = is_enabled(str(environ.get('LANDSCAPE_POSTER', True)), True) 
 # Verification Settings
 # ============================
 IS_VERIFY = is_enabled(environ.get('IS_VERIFY', 'True'), True)  # Verification On (True) / Off (False)
-LOG_VR_CHANNEL = int(environ.get('LOG_VR_CHANNEL', '-100')) #Verification Channel Id 
-LOG_API_CHANNEL = int(environ.get('LOG_API_CHANNEL', '-100')) #If Anyone Set Your Bot In Any Group And Set Shortner In That Group Then In This Channel The All Details Come
+LOG_VR_CHANNEL = int(environ.get('LOG_VR_CHANNEL', '0')) #Verification Channel Id 
+LOG_API_CHANNEL = int(environ.get('LOG_API_CHANNEL', '0')) #If Anyone Set Your Bot In Any Group And Set Shortner In That Group Then In This Channel The All Details Come
 VERIFY_IMG = environ.get("VERIFY_IMG", "https://telegra.ph/file/9ecc5d6e4df5b83424896.jpg")
 
 TUTORIAL = environ.get("TUTORIAL", "https://t.me/roaroicgroup")   # Tutorial link for verification
@@ -229,31 +229,26 @@ elif ON_HEROKU:
     FQDN = APP_NAME + '.herokuapp.com'
 else:
     FQDN = BIND_ADRESS
-URL = "https://{}/".format(FQDN) if ON_HEROKU or NO_PORT else "https://{}/".format(FQDN, PORT)
 SLEEP_THRESHOLD = int(environ.get('SLEEP_THRESHOLD', '60'))
 WORKERS = int(environ.get('WORKERS', '4'))
 SESSION_NAME = str(environ.get('SESSION_NAME', 'dreamXBotz'))
 MULTI_CLIENT = False
 name = str(environ.get('name', 'DREAMXBOTZ'))
-PING_INTERVAL = int(environ.get("PING_INTERVAL", "600"))  # 10 minutes (Render free sleeps after 15 min idle)
-if 'DYNO' in environ:
-    ON_HEROKU = True
-    APP_NAME = str(getenv('APP_NAME'))
+PING_INTERVAL = int(environ.get("PING_INTERVAL", "600"))
+
+# Public URL used by the keep-alive task and generated links.
+# Render/Heroku provide an HTTPS hostname; local development defaults to HTTP.
+HAS_SSL = is_enabled(environ.get('HAS_SSL', 'True' if (ON_RENDER or ON_HEROKU) else 'False'),
+                     ON_RENDER or ON_HEROKU)
+if ON_RENDER or ON_HEROKU or NO_PORT:
+    URL = f"{'https' if HAS_SSL else 'http'}://{FQDN}/"
 else:
-    ON_HEROKU = False
-HAS_SSL = is_enabled(str(getenv('HAS_SSL', True)), True)
-if HAS_SSL:
-    URL = "https://{}/".format(FQDN)
-else:
-    URL = "http://{}/".format(FQDN)
+    URL = f"{'https' if HAS_SSL else 'http'}://{FQDN}:{PORT}/"
 
 # ============================
 # Reactions Configuration
 # ============================
-REACTIONS = ["🤝", "😇", "🤗", "😍", "👍", "🎅", "😐", "🥰", "🤩", "😱", "🤣", "😘", "👏", "😛", "😈", "🎉", "⚡️", "🫡", "🤓", "😎", "🏆", "🔥", "🤭", "🌚", "🆒", "👻", "😁",
-             # --- 20 new reactions ---
-             "🤯", "🙏", "👌", "🕊", "🤡", "🥴", "🐳", "💯", "🍓", "🍾",
-             "💋", "😭", "👀", "🎃", "🙈", "🎄", "💅", "🗿", "🦄", "👾"]
+REACTIONS = ["🤝", "😇", "🤗", "😍", "👍", "🎅", "😐", "🥰", "🤩", "😱", "🤣", "😘", "👏", "😛", "😈", "🎉", "⚡️", "🫡", "🤓", "😎", "🏆", "🔥", "🤭", "🌚", "🆒", "👻", "😁", "🤯", "🙏", "👌", "🕊", "🤡", "🥴", "🐳", "💯", "🍓", "🍾", "💋", "😭", "👀", "🎃", "🙈", "🎄", "💅", "🗿", "🦄", "👾"]
 
 # ============================
 # Commands Bot
