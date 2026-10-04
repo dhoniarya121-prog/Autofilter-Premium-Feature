@@ -14,6 +14,32 @@ from Script import script
 from pyrogram.errors.exceptions.bad_request_400 import MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty
 from database.refer import referdb
 from database.users_chats_db import db
+
+
+async def _user_is_premium(user_id) -> bool:
+    """Premium check that never raises (used for ad-free results)."""
+    if not user_id:
+        return False
+    try:
+        return await db.has_premium_access(user_id)
+    except Exception:
+        return False
+
+
+def _sendall_btn(key, is_prem: bool):
+    """'Send All' button. Shows a lock for non-premium users when SENDALL_PREMIUM_ONLY is on."""
+    label = "Sᴇɴᴅ Aʟʟ"
+    if SENDALL_PREMIUM_ONLY and not is_prem:
+        label += " 🔒"
+    return InlineKeyboardButton(label, callback_data=f"sendfiles#{key}")
+
+
+def _ad_btn(is_prem: bool):
+    """'Remove Ads' button, hidden for Premium users (ad-free experience)."""
+    if is_prem:
+        return []
+    return [InlineKeyboardButton("ʀᴇᴍᴏᴠᴇ ᴀᴅs", url=f"https://t.me/{temp.U_NAME}?start=premium")]
+
 import asyncio
 import re
 import math
@@ -141,6 +167,7 @@ async def refercall(bot, query):
 
 @Client.on_callback_query(filters.regex(r"^next"))
 async def next_page(bot, query):
+    is_prem = await _user_is_premium(query.from_user.id)
     ident, req, key, offset = query.data.split("_")
     curr_time = datetime.now(pytz.timezone('Asia/Kolkata')).time()
     if int(req) not in [query.from_user.id, 0]:
@@ -187,10 +214,8 @@ async def next_page(bot, query):
                    )
         btn.insert(0,
                    [
-                       InlineKeyboardButton(
-                           "ʀᴇᴍᴏᴠᴇ ᴀᴅs", url=f"https://t.me/{temp.U_NAME}?start=premium"),
-                       InlineKeyboardButton(
-                           "Sᴇɴᴅ Aʟʟ", callback_data=f"sendfiles#{key}")
+                       *_ad_btn(is_prem),
+                       _sendall_btn(key, is_prem)
 
                    ]
                    )
@@ -208,9 +233,8 @@ async def next_page(bot, query):
                    ]
                    )
         btn.insert(0, [
-            InlineKeyboardButton(
-                "ʀᴇᴍᴏᴠᴇ ᴀᴅs", url=f"https://t.me/{temp.U_NAME}?start=premium"),
-            InlineKeyboardButton("Sᴇɴᴅ Aʟʟ", callback_data=f"sendfiles#{key}")
+            *_ad_btn(is_prem),
+            _sendall_btn(key, is_prem)
         ])
     if ULTRA_FAST_MODE:
         if 0 < offset <= 10:
@@ -221,15 +245,15 @@ async def next_page(bot, query):
             off_set = offset - 10
         if n_offset == 0:
             btn.append(
-                [InlineKeyboardButton("⋞ ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{off_set}"), InlineKeyboardButton(f"{math.ceil(int(offset)/10)+1}", callback_data="pages")]
+                [InlineKeyboardButton("⋞ ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{off_set}"), InlineKeyboardButton(f"{math.ceil(int(offset)/10)+1} / {max(math.ceil(int(total)/10), 1)}", callback_data="pages")]
             )
         elif off_set is None:
-            btn.append([InlineKeyboardButton("ᴘᴀɢᴇ", callback_data="pages"), InlineKeyboardButton(f"{math.ceil(int(offset)/10)+1}", callback_data="pages"), InlineKeyboardButton("ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{n_offset}")])
+            btn.append([InlineKeyboardButton("ᴘᴀɢᴇ", callback_data="pages"), InlineKeyboardButton(f"{math.ceil(int(offset)/10)+1} / {max(math.ceil(int(total)/10), 1)}", callback_data="pages"), InlineKeyboardButton("ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{n_offset}")])
         else:
             btn.append(
                 [
                     InlineKeyboardButton("⋞ ʙᴀᴄᴋ", callback_data=f"next_{req}_{key}_{off_set}"),
-                    InlineKeyboardButton(f"{math.ceil(int(offset)/10)+1}", callback_data="pages"),
+                    InlineKeyboardButton(f"{math.ceil(int(offset)/10)+1} / {max(math.ceil(int(total)/10), 1)}", callback_data="pages"),
                     InlineKeyboardButton("ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{n_offset}")
                 ],
             )
@@ -418,6 +442,7 @@ async def qualities_cb_handler(client: Client, query: CallbackQuery):
 
 @Client.on_callback_query(filters.regex(r"^fq#"))
 async def filter_qualities_cb_handler(client: Client, query: CallbackQuery):
+    is_prem = await _user_is_premium(query.from_user.id)
     _, qual, key = query.data.split("#")
     curr_time = datetime.now(pytz.timezone('Asia/Kolkata')).time()
     search = FRESH.get(key)
@@ -464,10 +489,8 @@ async def filter_qualities_cb_handler(client: Client, query: CallbackQuery):
                    )
         btn.insert(0,
                    [
-                       InlineKeyboardButton(
-                           "ʀᴇᴍᴏᴠᴇ ᴀᴅs", url=f"https://t.me/{temp.U_NAME}?start=premium"),
-                       InlineKeyboardButton(
-                           "Sᴇɴᴅ Aʟʟ", callback_data=f"sendfiles#{key}")
+                       *_ad_btn(is_prem),
+                       _sendall_btn(key, is_prem)
                    ])
     else:
         btn = []
@@ -483,10 +506,8 @@ async def filter_qualities_cb_handler(client: Client, query: CallbackQuery):
                    )
         btn.insert(0,
                    [
-                       InlineKeyboardButton(
-                           "ʀᴇᴍᴏᴠᴇ ᴀᴅs", url=f"https://t.me/{temp.U_NAME}?start=premium"),
-                       InlineKeyboardButton(
-                           "Sᴇɴᴅ Aʟʟ", callback_data=f"sendfiles#{key}")
+                       *_ad_btn(is_prem),
+                       _sendall_btn(key, is_prem)
 
                    ])
     if offset != "":
@@ -577,6 +598,7 @@ async def languages_cb_handler(client: Client, query: CallbackQuery):
 
 @Client.on_callback_query(filters.regex(r"^fl#"))
 async def filter_languages_cb_handler(client: Client, query: CallbackQuery):
+    is_prem = await _user_is_premium(query.from_user.id)
     _, lang, key = query.data.split("#")
     curr_time = datetime.now(pytz.timezone('Asia/Kolkata')).time()
     search = FRESH.get(key)
@@ -623,10 +645,8 @@ async def filter_languages_cb_handler(client: Client, query: CallbackQuery):
                    )
         btn.insert(0,
                    [
-                       InlineKeyboardButton(
-                           "ʀᴇᴍᴏᴠᴇ ᴀᴅs", url=f"https://t.me/{temp.U_NAME}?start=premium"),
-                       InlineKeyboardButton(
-                           "Sᴇɴᴅ Aʟʟ", callback_data=f"sendfiles#{key}")
+                       *_ad_btn(is_prem),
+                       _sendall_btn(key, is_prem)
                    ]
                    )
     else:
@@ -642,10 +662,8 @@ async def filter_languages_cb_handler(client: Client, query: CallbackQuery):
                    ])
         btn.insert(0,
                    [
-                       InlineKeyboardButton(
-                           "ʀᴇᴍᴏᴠᴇ ᴀᴅs", url=f"https://t.me/{temp.U_NAME}?start=premium"),
-                       InlineKeyboardButton(
-                           "Sᴇɴᴅ Aʟʟ", callback_data=f"sendfiles#{key}")
+                       *_ad_btn(is_prem),
+                       _sendall_btn(key, is_prem)
                    ])
     if offset != "":
         try:
@@ -726,6 +744,7 @@ async def seasons_cb_handler(client: Client, query: CallbackQuery):
 
 @Client.on_callback_query(filters.regex(r"^fs#"))
 async def filter_seasons_cb_handler(client: Client, query: CallbackQuery):
+    is_prem = await _user_is_premium(query.from_user.id)
     _, season_tag, key = query.data.split("#")
     search = FRESH.get(key).replace("_", " ")
     season_tag = season_tag.lower()
@@ -778,9 +797,8 @@ async def filter_seasons_cb_handler(client: Client, query: CallbackQuery):
     btn.insert(
         0,
         [
-            InlineKeyboardButton(
-                "ʀᴇᴍᴏᴠᴇ ᴀᴅs", url=f"https://t.me/{temp.U_NAME}?start=premium"),
-            InlineKeyboardButton("Sᴇɴᴅ Aʟʟ", callback_data=f"sendfiles#{key}"),
+            *_ad_btn(is_prem),
+            _sendall_btn(key, is_prem),
         ],
     )
     if n_offset != "":
@@ -889,6 +907,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data.startswith("sendfiles"):
         clicked = query.from_user.id
         ident, key = query.data.split("#")
+        if SENDALL_PREMIUM_ONLY and clicked not in ADMINS and not await db.has_premium_access(clicked):
+            await query.answer("🔒 Send All is a Premium feature!\n\nBuy Premium to get all files at once. Check /plan", show_alert=True)
+            return
         settings = await get_settings(query.message.chat.id)
         try:
             await query.answer(url=f"https://telegram.me/{temp.U_NAME}?start=allfiles_{query.message.chat.id}_{key}")
@@ -1390,6 +1411,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
     elif DreamxData.startswith("generate_stream_link"):
         _, file_id = DreamxData.split(":")
+        if STREAM_MODE and PREMIUM_STREAM_MODE and query.from_user.id not in ADMINS and not await db.has_premium_access(query.from_user.id):
+            return await query.answer("🔒 Stream / Fast Download is for Premium users only. Check /plan", show_alert=True)
         try:
             user_id = query.from_user.id
             username = query.from_user.mention
@@ -1536,6 +1559,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "give_trial":
         try:
             user_id = query.from_user.id
+            if await db.has_premium_access(user_id):
+                await query.answer("👑 ʏᴏᴜ ᴀʟʀᴇᴀᴅʏ ʜᴀᴠᴇ ᴀɴ ᴀᴄᴛɪᴠᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ !\n\n📌 ᴄʜᴇᴄᴋ : /myplan", show_alert=True)
+                return
             has_free_trial = await db.check_trial_status(user_id)
             if has_free_trial:
                 await query.answer(
@@ -1755,6 +1781,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
 
 async def auto_filter(client, msg, spoll=False):
+    is_prem = await _user_is_premium(getattr(getattr(msg, 'from_user', None), 'id', None))
     """
     Core auto_filter logic with timing/debug logging removed.
     """
@@ -1871,10 +1898,8 @@ async def auto_filter(client, msg, spoll=False):
                        )
             btn.insert(0,
                        [
-                           InlineKeyboardButton(
-                               "ʀᴇᴍᴏᴠᴇ ᴀᴅs", url=f"https://t.me/{temp.U_NAME}?start=premium"),
-                           InlineKeyboardButton(
-                               "Sᴇɴᴅ Aʟʟ", callback_data=f"sendfiles#{key}")
+                           *_ad_btn(is_prem),
+                           _sendall_btn(key, is_prem)
 
                        ])
         else:
@@ -1891,10 +1916,8 @@ async def auto_filter(client, msg, spoll=False):
                        )
             btn.insert(0,
                        [
-                           InlineKeyboardButton(
-                               "ʀᴇᴍᴏᴠᴇ ᴀᴅs", url=f"https://t.me/{temp.U_NAME}?start=premium"),
-                           InlineKeyboardButton(
-                               "Sᴇɴᴅ Aʟʟ", callback_data=f"sendfiles#{key}")
+                           *_ad_btn(is_prem),
+                           _sendall_btn(key, is_prem)
                        ])
 
         if offset != "":
@@ -1902,7 +1925,7 @@ async def auto_filter(client, msg, spoll=False):
             if ULTRA_FAST_MODE:
                 btn.append(
                     [InlineKeyboardButton("ᴘᴀɢᴇ", callback_data="pages"), InlineKeyboardButton(
-                        text="1", callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{offset}")]
+                        text=f"1 / {max(math.ceil(int(total_results)/10), 1)}", callback_data="pages"), InlineKeyboardButton(text="ɴᴇxᴛ ⋟", callback_data=f"next_{req}_{key}_{offset}")]
                 )
             else:
                 try:
