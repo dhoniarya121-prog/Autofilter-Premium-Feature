@@ -62,7 +62,7 @@ async def myplan(client, message):
             )
 
             await message.reply_photo(
-                photo=SUBSCRIPTION, 
+                photo=BG_PIC, 
                 caption=caption,
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("🔥 ᴇxᴛᴇɴᴅ ᴘʟᴀɴ", callback_data="premium_info")]]
