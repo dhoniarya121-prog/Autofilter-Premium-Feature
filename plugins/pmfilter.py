@@ -150,11 +150,18 @@ async def refercall(bot, query):
         InlineKeyboardButton('Back', callback_data='premium_info')
     ]]
     reply_markup = InlineKeyboardMarkup(btn)
+    try:
+        await bot.edit_message_media(
+            query.message.chat.id,
+            query.message.id,
+            InputMediaPhoto("https://graph.org/file/1a2e64aee3d4d10edd930.jpg")
+        )
+    except Exception as e:    
+        pass
     await query.message.edit_text(
         text=f'Hay Your refer link:\n\nhttps://t.me/{bot.me.username}?start=reff_{query.from_user.id}\n\nShare this link with your friends, Each time they join,  you will get 10 refferal points and after 100 points you will get 1 month premium subscription.',
         reply_markup=reply_markup,
-        parse_mode=enums.ParseMode.HTML,
-        disable_web_page_preview=True
+        parse_mode=enums.ParseMode.HTML
     )
     await query.answer()
 
@@ -1575,12 +1582,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 InlineKeyboardButton('🏠 ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ', callback_data='start')
             ]]
             reply_markup = InlineKeyboardMarkup(btn)
-            await client.edit_message_text(
+            await client.edit_message_media(
                 chat_id=query.message.chat.id,
                 message_id=query.message.id,
-                text=script.BPREMIUM_TXT,
-                parse_mode=enums.ParseMode.HTML,
-                disable_web_page_preview=True,
+                media=InputMediaPhoto(media=BG_PIC, caption=script.BPREMIUM_TXT, parse_mode=enums.ParseMode.HTML),
                 reply_markup=reply_markup
             )
         except Exception as e:
@@ -1596,12 +1601,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 InlineKeyboardButton('◀️ ʙᴀᴄᴋ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ', callback_data='premium_info')
             ]]
             reply_markup = InlineKeyboardMarkup(btn)
-            await client.edit_message_text(
+            await client.edit_message_media(
                 chat_id=query.message.chat.id,
                 message_id=query.message.id,
-                text=script.PREMIUM_TEXT,
-                parse_mode=enums.ParseMode.HTML,
-                disable_web_page_preview=True,
+                media=InputMediaPhoto(media=BG_PIC, caption=script.PREMIUM_TEXT, parse_mode=enums.ParseMode.HTML),
                 reply_markup=reply_markup
             )
         except Exception as e:
@@ -1615,12 +1618,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 InlineKeyboardButton('◀️ ʙᴀᴄᴋ', callback_data='buy_info')
             ]]
             reply_markup = InlineKeyboardMarkup(btn)
-            await client.edit_message_text(
+            await client.edit_message_media(
                 chat_id=query.message.chat.id,
                 message_id=query.message.id,
-                text=script.PREMIUM_UPI_TEXT.format(OWNER_UPI_ID),
-                parse_mode=enums.ParseMode.HTML,
-                disable_web_page_preview=True,
+                media=InputMediaPhoto(media=BG_PIC, caption=script.PREMIUM_UPI_TEXT.format(OWNER_UPI_ID), parse_mode=enums.ParseMode.HTML),
                 reply_markup=reply_markup
             )
         except Exception as e:
@@ -1635,12 +1636,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
             buttons = [btn[i:i + 2] for i in range(0, len(btn), 2)]
             buttons.append([InlineKeyboardButton("⋞ ʙᴀᴄᴋ", callback_data="buy_info")])
             reply_markup = InlineKeyboardMarkup(buttons)
-            await client.edit_message_text(
+            await client.edit_message_media(
                 chat_id=query.message.chat.id,
                 message_id=query.message.id,
-                text=script.PREMIUM_STAR_TEXT,
-                parse_mode=enums.ParseMode.HTML,
-                disable_web_page_preview=True,
+                media=InputMediaPhoto(media=BG_PIC, caption=script.PREMIUM_STAR_TEXT, parse_mode=enums.ParseMode.HTML),
                 reply_markup=reply_markup
             )
         except Exception as e:
