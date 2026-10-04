@@ -37,6 +37,20 @@ async def start(client, message):
         except Exception:
             await message.react(emoji="⚡️", big=True)
     m = message
+    # Send All is premium-protected (also blocks hand-made deep links)
+    if (SENDALL_PREMIUM_ONLY and len(m.command) == 2
+            and m.command[1].startswith(('allfiles', 'sendall'))
+            and m.from_user.id not in ADMINS
+            and not await db.has_premium_access(m.from_user.id)):
+        lock = await m.reply_text(
+            "<b>🔒 sᴇɴᴅ ᴀʟʟ ɪs ᴀ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ\n\n"
+            "ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ᴛᴏ ɢᴇᴛ ᴀʟʟ ꜰɪʟᴇꜱ ᴀᴛ ᴏɴᴄᴇ 👑\n"
+            "ᴄʜᴇᴄᴋ ᴘʟᴀɴꜱ: /plan</b>",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🚀 Buy Premium 🚀", callback_data="premium_info")]]),
+            parse_mode=enums.ParseMode.HTML
+        )
+        asyncio.create_task(_delete_later(lock, 120))
+        return
     if len(m.command) == 2 and m.command[1].startswith(('notcopy', 'sendall')):
         _, userid, verify_id, file_id = m.command[1].split("_", 3)
         user_id = int(userid)
@@ -236,8 +250,9 @@ async def start(client, message):
 
     # Fetch file details concurrently with user checks
     file_details_task = asyncio.create_task(get_file_details(file_id))
+    is_premium = await db.has_premium_access(message.from_user.id)
 
-    if not await db.has_premium_access(message.from_user.id): 
+    if not is_premium:
         try:
             btn = []
             chat = int(data.split("_", 2)[1])
@@ -249,6 +264,7 @@ async def start(client, message):
             if AUTH_REQ_CHANNELS:
                 btn += await is_req_subscribed(client, message.from_user.id, AUTH_REQ_CHANNELS)
             if btn:
+                reply_markup = InlineKeyboardMarkup(btn)
                 if len(message.command) > 1 and "_" in message.command[1]:
                     kk, file_id = message.command[1].split("_", 1)
                     btn.append([
@@ -275,7 +291,7 @@ async def start(client, message):
 
 
     user_id = m.from_user.id
-    if not await db.has_premium_access(user_id):
+    if not is_premium:
         try:
             grp_id = int(grp_id)
             user_verified = await db.is_user_verified(user_id)
@@ -332,6 +348,23 @@ async def start(client, message):
             print(f"Error In Verification - {e}")
             pass
 
+    # Daily file limit (non-premium only; Premium = unlimited)
+    if not is_premium and FREE_DAILY_LIMIT > 0:
+        need = len(temp.GETALL.get(file_id) or []) or 1 if data.startswith("allfiles") else 1
+        allowed, used = await db.consume_daily_files(message.from_user.id, FREE_DAILY_LIMIT, need)
+        if not allowed:
+            left = max(FREE_DAILY_LIMIT - used, 0)
+            lim_msg = await m.reply_text(
+                f"<b>🚫 ᴅᴀɪʟʏ ʟɪᴍɪᴛ ʀᴇᴀᴄʜᴇᴅ</b>\n\n"
+                f"ꜰʀᴇᴇ ᴜꜱᴇʀꜱ ᴄᴀɴ ɢᴇᴛ <b>{FREE_DAILY_LIMIT}</b> ꜰɪʟᴇꜱ ᴘᴇʀ ᴅᴀʏ (ʟᴇꜰᴛ ᴛᴏᴅᴀʏ: <b>{left}</b>).\n"
+                f"ʟɪᴍɪᴛ ʀᴇꜱᴇᴛꜱ ᴀᴛ 12 AM IST.\n\n"
+                f"👑 <b>ᴘʀᴇᴍɪᴜᴍ = ᴜɴʟɪᴍɪᴛᴇᴅ ꜰɪʟᴇꜱ ᴅᴀɪʟʏ.</b> ᴄʜᴇᴄᴋ /plan",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🚀 Buy Premium 🚀", callback_data="premium_info")]]),
+                parse_mode=enums.ParseMode.HTML
+            )
+            asyncio.create_task(_delete_later(lim_msg, 120))
+            return
+
     # Now, await the file details task
     files_ = await file_details_task
 
@@ -367,7 +400,7 @@ async def start(client, message):
                     ]
                 elif STREAM_MODE and PREMIUM_STREAM_MODE:
                     
-                    if not await db.has_premium_access(message.from_user.id):
+                    if not is_premium:
                         
                         btn = [
                             [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'prestream')],
@@ -385,7 +418,7 @@ async def start(client, message):
                     chat_id=message.from_user.id,
                     file_id=file_id,
                     caption=f_caption,
-                    protect_content=settings.get('file_secure', PROTECT_CONTENT),
+                    protect_content=False if is_premium else settings.get('file_secure', PROTECT_CONTENT),
                     reply_markup=InlineKeyboardMarkup(btn)
                 )
                 filesarr.append(msg)
@@ -410,7 +443,7 @@ async def start(client, message):
                     [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
                 ]
             elif STREAM_MODE and PREMIUM_STREAM_MODE:
-                if not await db.has_premium_access(message.from_user.id):
+                if not is_premium:
                    btn = [
                         [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'prestream')],
                         [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
@@ -426,7 +459,7 @@ async def start(client, message):
             msg = await client.send_cached_media(
                 chat_id=message.from_user.id,
                 file_id=file_id,
-                protect_content=settings.get('file_secure', PROTECT_CONTENT),
+                protect_content=False if is_premium else settings.get('file_secure', PROTECT_CONTENT),
                 reply_markup=InlineKeyboardMarkup(btn))
 
             filetype = msg.media
@@ -479,7 +512,7 @@ async def start(client, message):
             [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
         ]
     elif STREAM_MODE and PREMIUM_STREAM_MODE:
-        if not await db.has_premium_access(message.from_user.id):
+        if not is_premium:
             btn = [
                 [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'prestream')],
                 [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
@@ -495,7 +528,7 @@ async def start(client, message):
         chat_id=message.from_user.id,
         file_id=file_id,
         caption=f_caption,
-        protect_content=settings.get('file_secure', PROTECT_CONTENT),
+        protect_content=False if is_premium else settings.get('file_secure', PROTECT_CONTENT),
         reply_markup=InlineKeyboardMarkup(btn)
     )
     k = await msg.reply(script.DEL_MSG.format(get_time(DELETE_TIME)),
