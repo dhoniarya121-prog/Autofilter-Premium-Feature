@@ -1454,7 +1454,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     InlineKeyboardButton(' ʜᴇʟᴘ 😎', callback_data='help'),
                     InlineKeyboardButton(' ᴀʙᴏᴜᴛ ᴍᴇ 📖', callback_data='about')
                 ],[
-                    InlineKeyboardButton('ᴛᴀʀɴᴅɪɴɢ ⭐', callback_data="topsearch"),
+                    InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
                      InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
                 ]]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -1927,7 +1927,7 @@ async def auto_filter(client, msg, spoll=False):
                 text="↭ ɴᴏ ᴍᴏʀᴇ ᴘᴀɢᴇꜱ ᴀᴠᴀɪʟᴀʙʟᴇ ↭", callback_data="pages")])
 
         if settings.get('imdb'):
-            imdb = await get_posterx(search, file=(files[0]).file_name) if TMDB_POSTERS else await get_poster(search, file=(files[0]).file_name)
+            imdb = await get_posterx(search, file=(files[0]).file_name) if TMDB_ON_SEARCH else await get_poster(search, file=(files[0]).file_name)
         else:
             imdb = None
 
@@ -2001,7 +2001,7 @@ async def auto_filter(client, msg, spoll=False):
         try:
             if imdb and imdb.get('poster'):
                 try:
-                    if TMDB_POSTERS:
+                    if TMDB_ON_SEARCH:
                         photo = imdb.get('backdrop') if imdb.get('backdrop') and LANDSCAPE_POSTER else imdb.get('poster')
                     else:
                         photo = imdb.get('poster')
