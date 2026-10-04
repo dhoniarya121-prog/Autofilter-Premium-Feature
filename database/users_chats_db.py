@@ -20,6 +20,7 @@ class Database:
         self.filename_col = self.db.filename
         self.movie_updates = self.db.movie_updates
         self.connection = self.db.connections
+        self.daily = self.db.daily_files
 
     async def add_name(self, filename):
         if await self.movie_updates.find_one({'_id': filename}):
@@ -218,7 +219,8 @@ class Database:
                 "last_verified": datetime.datetime(2020, 5, 17, 0, 0, 0, tzinfo=ist_timezone),
                 "second_time_verified": datetime.datetime(2019, 5, 17, 0, 0, 0, tzinfo=ist_timezone),
             }
-            user = await self.misc.insert_one(res)
+            await self.misc.insert_one(res)
+            user = res
         return user
 
     async def update_notcopy_user(self, user_id, value:dict):
@@ -313,6 +315,35 @@ class Database:
         newvalues = { "$set": value }
         return await self.verify_id.update_one(myquery, newvalues)
         
+    # ---------- Daily file counters (reset 12 AM IST) ----------
+    async def _daily_doc(self, user_id):
+        today = datetime.datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%d')
+        doc = await self.daily.find_one({'_id': user_id})
+        if not doc or doc.get('date') != today:
+            doc = {'_id': user_id, 'date': today, 'free_used': 0, 'sent': 0}
+            await self.daily.replace_one({'_id': user_id}, doc, upsert=True)
+        return doc
+
+    async def use_free_file(self, user_id, limit):
+        """Grant one verification-free file. Returns (granted, used_today)."""
+        doc = await self._daily_doc(user_id)
+        used = doc.get('free_used', 0)
+        if used >= limit:
+            return False, used
+        await self.daily.update_one({'_id': user_id}, {'$inc': {'free_used': 1}})
+        return True, used + 1
+
+    async def consume_daily_files(self, user_id, limit, amount=1):
+        """Daily cap for non-premium users. Returns (allowed, used_today). limit <= 0 means unlimited."""
+        if limit <= 0:
+            return True, 0
+        doc = await self._daily_doc(user_id)
+        used = doc.get('sent', 0)
+        if used + amount > limit:
+            return False, used
+        await self.daily.update_one({'_id': user_id}, {'$inc': {'sent': amount}})
+        return True, used + amount
+
     async def has_premium_access(self, user_id):
         user_data = await self.get_user(user_id)
         if user_data:
