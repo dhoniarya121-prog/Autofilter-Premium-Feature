@@ -1,10 +1,11 @@
 import re
 import os
+import random
 import logging
 from info import *
 from imdb import Cinemagoer 
 import asyncio
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from pyrogram.errors import InputUserDeactivated, UserNotParticipant, FloodWait, UserIsBlocked, PeerIdInvalid, ChatAdminRequired, MessageNotModified
 from pyrogram import enums
 from typing import Union
@@ -914,7 +915,6 @@ async def get_cap(settings, remaining_seconds, files, query, total_results, sear
 # ============================================================
 #  Beautiful button + background-photo helpers
 # ============================================================
-from pyrogram.types import InputMediaPhoto as _InputMediaPhoto
 
 
 def start_buttons():
@@ -933,27 +933,72 @@ def back_btn(cb='start', label='🏠 ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ'):
     return [InlineKeyboardButton(label, callback_data=cb)]
 
 
-async def edit_menu(query, text, buttons, pic=None):
-    """Edit the current menu message so it always shows the background photo.
-    Falls back to a plain text edit if the message cannot carry media."""
-    markup = buttons if isinstance(buttons, InlineKeyboardMarkup) else InlineKeyboardMarkup(buttons)
+def _menu_pic(pic=None):
+    """Random menu photo from PICS (or the given one)."""
+    if pic:
+        return pic
     try:
-        await query.message.edit_media(
-            media=_InputMediaPhoto(pic or BG_PIC, caption=text, parse_mode=enums.ParseMode.HTML),
-            reply_markup=markup,
-        )
-    except MessageNotModified:
-        pass
+        return random.choice(PICS) if PICS else None
     except Exception:
+        return None
+
+
+def _to_markup(buttons):
+    if buttons is None or isinstance(buttons, InlineKeyboardMarkup):
+        return buttons
+    return InlineKeyboardMarkup(buttons)
+
+
+async def send_menu(message, text, buttons=None, pic=None):
+    """Reply with a photo + caption (old style). Falls back to plain text if the
+    photo fails to load or the text is longer than Telegram's 1024 caption limit."""
+    markup = _to_markup(buttons)
+    photo = _menu_pic(pic)
+    if photo and len(text) <= 1024:
         try:
-            await query.message.edit_text(text, reply_markup=markup,
-                                          parse_mode=enums.ParseMode.HTML,
-                                          disable_web_page_preview=True)
-        except MessageNotModified:
-            pass
-        except Exception:
+            return await message.reply_photo(photo=photo, caption=text, reply_markup=markup,
+                                             parse_mode=enums.ParseMode.HTML)
+        except Exception as e:
+            logger.warning(f"send_menu photo failed, using text: {e}")
+    return await message.reply_text(text, reply_markup=markup,
+                                    parse_mode=enums.ParseMode.HTML,
+                                    disable_web_page_preview=True)
+
+
+async def edit_menu(query, text, buttons, pic=None):
+    """Edit the current menu in place, keeping the photo (old style).
+    Photo message -> swap photo + caption; text message -> edit text.
+    Any failure falls back to a fresh message so the button never looks dead."""
+    markup = _to_markup(buttons)
+    msg = query.message
+    try:
+        if msg.photo:
+            photo = _menu_pic(pic)
+            if photo and len(text) <= 1024:
+                try:
+                    await msg.edit_media(
+                        InputMediaPhoto(photo, caption=text, parse_mode=enums.ParseMode.HTML),
+                        reply_markup=markup)
+                    return
+                except MessageNotModified:
+                    return
+                except Exception:
+                    await msg.edit_caption(text, reply_markup=markup,
+                                           parse_mode=enums.ParseMode.HTML)
+                    return
+            # text too long for a caption -> replace by a text message
             try:
-                await query.message.edit_caption(text, reply_markup=markup,
-                                                 parse_mode=enums.ParseMode.HTML)
+                await msg.delete()
             except Exception:
                 pass
+            await msg.chat.send_message(text, reply_markup=markup,
+                                        parse_mode=enums.ParseMode.HTML,
+                                        disable_web_page_preview=True)
+        else:
+            await msg.edit_text(text, reply_markup=markup,
+                                parse_mode=enums.ParseMode.HTML,
+                                disable_web_page_preview=True)
+    except MessageNotModified:
+        pass
+    except Exception as e:
+        logger.warning(f"edit_menu failed: {e}")
