@@ -773,6 +773,8 @@ async def get_seconds(time_string):
             value = int(value)
         return value, unit
     value, unit = extract_value_and_unit(time_string)
+    if not isinstance(value, int):
+        return 0
     if unit == 's':
         return value
     elif unit == 'min':
