@@ -3,7 +3,8 @@ import pytz
 import datetime
 from Script import script 
 from info import *
-from utils import get_seconds, temp
+from utils import temp
+from time_utils import get_seconds
 from database.users_chats_db import db 
 import asyncio
 from pyrogram import Client, filters 
