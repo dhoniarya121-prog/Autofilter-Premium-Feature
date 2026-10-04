@@ -105,7 +105,7 @@ async def start(client, message):
                     InlineKeyboardButton(' ʜᴇʟᴘ 😎', callback_data='help'),
                     InlineKeyboardButton(' ᴀʙᴏᴜᴛ ᴍᴇ 📖', callback_data='about')
                 ],[
-                    InlineKeyboardButton('ᴛᴀʀɴᴅɪɴɢ ⭐', callback_data="topsearch"),
+                    InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
                      InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
                 ]] 
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -138,7 +138,7 @@ async def start(client, message):
                     InlineKeyboardButton(' ʜᴇʟᴘ 😎', callback_data='help'),
                     InlineKeyboardButton(' ᴀʙᴏᴜᴛ ᴍᴇ 📖', callback_data='about')
                 ],[
-                    InlineKeyboardButton('ᴛᴀʀɴᴅɪɴɢ ⭐', callback_data="topsearch"),
+                    InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
                      InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
                 ]]
                     
@@ -282,7 +282,21 @@ async def start(client, message):
             settings = await get_settings(grp_id)
             is_second_shortener = await db.use_second_shortener(user_id, settings.get('verify_time', TWO_VERIFY_GAP)) 
             is_third_shortener = await db.use_third_shortener(user_id, settings.get('third_verify_time', THREE_VERIFY_GAP))
-            if settings.get("is_verify", IS_VERIFY) and (not user_verified or is_second_shortener or is_third_shortener):
+            verify_needed = settings.get("is_verify", IS_VERIFY) and (not user_verified or is_second_shortener or is_third_shortener)
+            free_granted = False
+            if verify_needed and FREE_FILES_BEFORE_VERIFY > 0:
+                free_granted, free_used = await db.use_free_file(user_id, FREE_FILES_BEFORE_VERIFY)
+                if free_granted:
+                    left = FREE_FILES_BEFORE_VERIFY - free_used
+                    note = (f"🎁 <b>ꜰʀᴇᴇ ꜰɪʟᴇ {free_used}/{FREE_FILES_BEFORE_VERIFY} — ɴᴏ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ɴᴇᴇᴅᴇᴅ!</b>\n"
+                            + (f"<i>{left} ꜰʀᴇᴇ ꜰɪʟᴇ(s) ʟᴇꜰᴛ ᴛᴏᴅᴀʏ ʙᴇꜰᴏʀᴇ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ꜱᴛᴀʀᴛꜱ.</i>" if left > 0
+                               else "<i>ɴᴇxᴛ ꜰɪʟᴇ ʀᴇǫᴜɪʀᴇꜱ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ. ꜰʀᴇᴇ ꜰɪʟᴇꜱ ʀᴇꜱᴇᴛ ᴅᴀɪʟʏ (12 AM IST).</i>"))
+                    try:
+                        free_msg = await m.reply_text(note, parse_mode=enums.ParseMode.HTML)
+                        asyncio.create_task(_delete_later(free_msg, 60))
+                    except Exception as e:
+                        logger.warning(f"Free-file notice failed: {e}")
+            if verify_needed and not free_granted:
                 verify_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
                 await db.create_verify_id(user_id, verify_id)
                 temp.VERIFICATIONS[user_id] = grp_id
@@ -852,8 +866,39 @@ async def deletemultiplefiles(bot, message):
     )
 
 
-@Client.on_callback_query(filters.regex("topsearch"))
+
+async def _delete_later(msg, seconds):
+    await asyncio.sleep(seconds)
+    try:
+        await msg.delete()
+    except Exception:
+        pass
+
+
+async def trending_allowed(user_id: int) -> bool:
+    """Trending / top-search is a Premium feature (admins always allowed)."""
+    if not TRENDING_PREMIUM_ONLY:
+        return True
+    if user_id in ADMINS:
+        return True
+    return await db.has_premium_access(user_id)
+
+
+TRENDING_LOCK_TXT = (
+    "<b>🔒 ᴛʀᴇɴᴅɪɴɢ ɪs ᴀ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇ\n\n"
+    "ᴜɴʟᴏᴄᴋ ᴛᴏᴅᴀʏ's ᴛᴏᴘ sᴇᴀʀᴄʜᴇs ᴡɪᴛʜ ᴀ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ 👑\n\n"
+    "ᴄʜᴇᴄᴋ ᴘʟᴀɴs: /plan</b>"
+)
+TRENDING_LOCK_BTN = InlineKeyboardMarkup(
+    [[InlineKeyboardButton("🚀 Buy Premium 🚀", callback_data="premium_info")]]
+)
+
+@Client.on_callback_query(filters.regex("^topsearch$"))
 async def topsearch_callback(client, callback_query):
+    if not await trending_allowed(callback_query.from_user.id):
+        await callback_query.answer("🔒 Trending is for Premium users only. Check /plan", show_alert=True)
+        await callback_query.message.reply_text(TRENDING_LOCK_TXT, reply_markup=TRENDING_LOCK_BTN)
+        return
     def is_alphanumeric(string):
         return bool(re.match('^[a-zA-Z0-9 ]*$', string))
 
@@ -884,6 +929,9 @@ async def topsearch_callback(client, callback_query):
 
 @Client.on_message(filters.command('top_search'))
 async def top(_, message):
+    if not await trending_allowed(message.from_user.id):
+        await message.reply_text(TRENDING_LOCK_TXT, reply_markup=TRENDING_LOCK_BTN)
+        return
     def is_alphanumeric(string):
         return bool(re.match('^[a-zA-Z0-9 ]*$', string))
     try:
@@ -915,6 +963,9 @@ async def top(_, message):
 
 @Client.on_message(filters.command('trendlist'))
 async def trendlist(client, message):
+    if not await trending_allowed(message.from_user.id):
+        await message.reply_text(TRENDING_LOCK_TXT, reply_markup=TRENDING_LOCK_BTN)
+        return
     def is_alphanumeric(string):
         return bool(re.match('^[a-zA-Z0-9 ]*$', string))
     limit = 31
