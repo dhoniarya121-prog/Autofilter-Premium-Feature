@@ -18,7 +18,7 @@ from pyrogram.errors import FloodWait, ChatAdminRequired, UserNotParticipant
 from database.ia_filterdb import Media, Media2, get_file_details, unpack_new_file_id, get_bad_files
 from database.users_chats_db import db
 from info import *
-from utils import get_settings, save_group_settings, is_subscribed, is_req_subscribed, get_size, get_shortlink, is_check_admin, temp, get_readable_time, get_time, generate_settings_text, log_error, clean_filename
+from utils import get_settings, save_group_settings, is_subscribed, is_req_subscribed, get_size, get_shortlink, is_check_admin, temp, get_readable_time, get_time, generate_settings_text, log_error, clean_filename, start_buttons
 import time
 
 
@@ -81,12 +81,15 @@ async def start(client, message):
         else:
             verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=file_{grp_id}_{file_id}"
         await client.send_message(settings['log'], script.VERIFIED_LOG_TEXT.format(m.from_user.mention, user_id, datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%d %B %Y'), num))
-        btn = [[
-            InlineKeyboardButton("✅ ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇ ✅", url=verifiedfiles),
-        ]]
+        # Verification complete -> show a big "get your movie" button
+        is_all = message.command[1].startswith('sendall')
+        btn = [
+            [InlineKeyboardButton("📦 ɢᴇᴛ ᴀʟʟ ꜰɪʟᴇꜱ ɴᴏᴡ" if is_all else "🎬 ɢᴇᴛ ʏᴏᴜʀ ᴍᴏᴠɪᴇ ɴᴏᴡ", url=verifiedfiles)],
+            [InlineKeyboardButton("📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ", url=UPDATE_CHNL_LNK)],
+        ]
         reply_markup=InlineKeyboardMarkup(btn)
         dlt=await m.reply_photo(
-            photo=(VERIFY_IMG),
+            photo=BG_PIC,
             caption=msg.format(message.from_user.mention, get_readable_time(TWO_VERIFY_GAP)),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
@@ -112,17 +115,7 @@ async def start(client, message):
         await db.add_user(message.from_user.id, message.from_user.first_name)
         await client.send_message(LOG_CHANNEL, script.LOG_TEXT_P.format(message.from_user.id, message.from_user.mention))
     if len(message.command) != 2:
-        buttons = [[
-                    InlineKeyboardButton(' ⌣🍒ᴄʜᴀɴɴᴇʟs ', callback_data='channel'),
-                    InlineKeyboardButton(' 🔍ɢʀᴏᴜᴘ ', callback_data='ɢʀᴏᴜᴘ')
-                ],[
-                    InlineKeyboardButton(' ʜᴇʟᴘ 😎', callback_data='help'),
-                    InlineKeyboardButton(' ᴀʙᴏᴜᴛ ᴍᴇ 📖', callback_data='about')
-                ],[
-                    InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
-                     InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
-                ]] 
-        reply_markup = InlineKeyboardMarkup(buttons)
+        reply_markup = start_buttons()
         current_time = datetime.now(pytz.timezone(TIMEZONE))
         curr_time = current_time.hour        
         if curr_time < 12:
@@ -137,7 +130,7 @@ async def start(client, message):
         await asyncio.sleep(0.4)
         await m.delete()        
         await message.reply_photo(
-            photo=random.choice(PICS),
+            photo=BG_PIC,
             caption=script.START_TXT.format(message.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
@@ -145,18 +138,7 @@ async def start(client, message):
         return
 
     if len(message.command) == 2 and message.command[1] in ["subscribe", "error", "okay", "help"]:
-        buttons = [[
-                    InlineKeyboardButton(' ⌣🍒ᴄʜᴀɴɴᴇʟs ', callback_data='channel'),
-                    InlineKeyboardButton(' 🔍ɢʀᴏᴜᴘ ', callback_data='ɢʀᴏᴜᴘ')
-                ],[
-                    InlineKeyboardButton(' ʜᴇʟᴘ 😎', callback_data='help'),
-                    InlineKeyboardButton(' ᴀʙᴏᴜᴛ ᴍᴇ 📖', callback_data='about')
-                ],[
-                    InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
-                     InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
-                ]]
-                    
-        reply_markup = InlineKeyboardMarkup(buttons)
+        reply_markup = start_buttons()
         current_time = datetime.now(pytz.timezone(TIMEZONE))
         curr_time = current_time.hour        
         if curr_time < 12:
@@ -171,7 +153,7 @@ async def start(client, message):
         await asyncio.sleep(0.4)
         await m.delete()        
         await message.reply_photo(
-            photo=random.choice(PICS),
+            photo=BG_PIC,
             caption=script.START_TXT.format(message.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
@@ -227,7 +209,7 @@ async def start(client, message):
                   ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await message.reply_photo(
-            photo=(SUBSCRIPTION),
+            photo=BG_PIC,
             caption=script.PREPLANS_TXT.format(message.from_user.mention, OWNER_UPI_ID, QR_CODE),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
