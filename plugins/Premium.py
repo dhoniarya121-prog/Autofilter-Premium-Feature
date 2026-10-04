@@ -3,10 +3,11 @@ import pytz
 import datetime
 from Script import script 
 from info import *
-from utils import get_seconds, temp
+from utils import temp
+from time_utils import get_seconds
 from database.users_chats_db import db 
 import asyncio
-from pyrogram import Client, filters 
+from pyrogram import Client, filters, enums
 from pyrogram.errors.exceptions.bad_request_400 import MessageTooLong
 from pyrogram.types import *
 
@@ -61,9 +62,9 @@ async def myplan(client, message):
                 f"⌛️ <b>ᴇxᴘɪʀʏ ᴅᴀᴛᴇ :</b> {expiry_str_in_ist}"
             )
 
-            await message.reply_photo(
-                photo=SUBSCRIPTION, 
-                caption=caption,
+            await message.reply_text(
+                text=caption,
+                parse_mode=enums.ParseMode.HTML,
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("🔥 ᴇxᴛᴇɴᴅ ᴘʟᴀɴ", callback_data="premium_info")]]
                 )
@@ -194,22 +195,29 @@ async def plan(client, message):
         f"<b><u>🚫 ᴛʜɪs ᴜsᴇʀs ᴛʀʏ ᴛᴏ ᴄʜᴇᴄᴋ /plan</u> {temp.B_LINK}\n\n"
         f"- ɪᴅ - `{user_id}`\n- ɴᴀᴍᴇ - {users}</b>")
     btn = [[
-            InlineKeyboardButton('• ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ •', callback_data='buy_info'),
+            InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ 💎', callback_data='buy_info'),
         ],[
-            InlineKeyboardButton('• ʀᴇꜰᴇʀ ꜰʀɪᴇɴᴅꜱ', callback_data='reffff'),
-            InlineKeyboardButton('ꜰʀᴇᴇ ᴛʀɪᴀʟ •', callback_data='give_trial')
+            InlineKeyboardButton('🎁 ʀᴇꜰᴇʀ ꜰʀɪᴇɴᴅꜱ', callback_data='reffff'),
+            InlineKeyboardButton('🆓 ꜰʀᴇᴇ ᴛʀɪᴀʟ', callback_data='give_trial')
         ],[
-            InlineKeyboardButton('🚫 ᴄʟᴏꜱᴇ 🚫', callback_data='close_data')
+            InlineKeyboardButton('❌ ᴄʟᴏꜱᴇ', callback_data='close_data')
         ]]
-    msg = await message.reply_photo(
-        photo="https://graph.org/file/86da2027469565b5873d6.jpg",
-        caption=script.BPREMIUM_TXT,
+    msg = await message.reply_text(
+        text=script.BPREMIUM_TXT,
+        parse_mode=enums.ParseMode.HTML,
+        disable_web_page_preview=True,
         reply_markup=InlineKeyboardMarkup(btn)
     )
-    await client.send_message(PREMIUM_LOGS, log_message)
+    try:
+        await client.send_message(PREMIUM_LOGS, log_message)
+    except Exception as e:
+        print(f"plan log failed: {e}")
     await asyncio.sleep(300)
-    await msg.delete()
-    await message.delete()
+    try:
+        await msg.delete()
+        await message.delete()
+    except Exception:
+        pass
 
 
 # Telegram Star Payment Method 👇
