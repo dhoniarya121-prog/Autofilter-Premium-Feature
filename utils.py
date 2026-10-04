@@ -760,36 +760,8 @@ def generate_season_variations(search_raw: str, season_number: int):
 
 
 
-async def get_seconds(time_string):
-    def extract_value_and_unit(ts):
-        value = ""
-        unit = ""
-        index = 0
-        while index < len(ts) and ts[index].isdigit():
-            value += ts[index]
-            index += 1
-        unit = ts[index:].lstrip()
-        if value:
-            value = int(value)
-        return value, unit
-    value, unit = extract_value_and_unit(time_string)
-    if not isinstance(value, int):
-        return 0
-    if unit == 's':
-        return value
-    elif unit == 'min':
-        return value * 60
-    elif unit == 'hour':
-        return value * 3600
-    elif unit == 'day':
-        return value * 86400
-    elif unit == 'month':
-        return value * 86400 * 30
-    elif unit == 'year':
-        return value * 86400 * 365
-    else:
-        return 0
-    
+from time_utils import get_seconds  # noqa: E402,F401  (kept for backward compatibility)
+
 
 def clean_search_text(search_raw: str) -> str:
     search_lower = search_raw.lower()
@@ -937,3 +909,44 @@ async def get_cap(settings, remaining_seconds, files, query, total_results, sear
     except Exception as e:
         logging.error(f"Error in get_cap: {e}")
         pass
+
+
+# ============================================================
+#  Beautiful button + background-photo helpers
+# ============================================================
+
+
+def start_buttons():
+    """Main menu keyboard (used by /start and the 'back to home' callback)."""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton('📢 ᴄʜᴀɴɴᴇʟꜱ', callback_data='channel'),
+         InlineKeyboardButton('🔎 ꜱᴇᴀʀᴄʜ ɢʀᴏᴜᴘ', callback_data='ɢʀᴏᴜᴘ')],
+        [InlineKeyboardButton('🆘 ʜᴇʟᴘ', callback_data='help'),
+         InlineKeyboardButton('ℹ️ ᴀʙᴏᴜᴛ', callback_data='about')],
+        [InlineKeyboardButton('🔥 ᴛʀᴇɴᴅɪɴɢ', callback_data='topsearch'),
+         InlineKeyboardButton('💎 ᴘʀᴇᴍɪᴜᴍ', callback_data='premium_info')],
+    ])
+
+
+def back_btn(cb='start', label='🏠 ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ'):
+    return [InlineKeyboardButton(label, callback_data=cb)]
+
+
+async def edit_menu(query, text, buttons, pic=None):
+    """Edit the current menu message in place (text only, no background photo).
+    Falls back to editing the caption if the message happens to be a media message."""
+    markup = buttons if isinstance(buttons, InlineKeyboardMarkup) else InlineKeyboardMarkup(buttons)
+    try:
+        await query.message.edit_text(text, reply_markup=markup,
+                                      parse_mode=enums.ParseMode.HTML,
+                                      disable_web_page_preview=True)
+    except MessageNotModified:
+        pass
+    except Exception:
+        try:
+            await query.message.edit_caption(text, reply_markup=markup,
+                                             parse_mode=enums.ParseMode.HTML)
+        except MessageNotModified:
+            pass
+        except Exception as e:
+            logger.warning(f"edit_menu failed: {e}")
