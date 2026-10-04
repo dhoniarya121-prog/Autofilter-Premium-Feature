@@ -54,8 +54,8 @@ async def dreamxbotz_start():
             spec.loader.exec_module(load)
             sys.modules["plugins." + plugin_name] = load
             print("DreamxBotz Imported => " + plugin_name)
-    if ON_HEROKU:
-        asyncio.create_task(ping_server()) 
+    if ON_HEROKU or ON_RENDER:
+        asyncio.create_task(ping_server())
     b_users, b_chats = await db.get_banned()
     temp.BANNED_USERS = b_users
     temp.BANNED_CHATS = b_chats
@@ -78,8 +78,8 @@ async def dreamxbotz_start():
     tz = pytz.timezone('Asia/Kolkata')
     today = date.today()
     now = datetime.now(tz)
-    time = now.strftime("%H:%M:%S %p")
-    await dreamxbotz.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(temp.B_LINK, today, time))
+    time_str = now.strftime("%H:%M:%S %p")
+    await dreamxbotz.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(temp.B_LINK, today, time_str))
     app = web.AppRunner(await web_server())
     await app.setup()
     bind_address = "0.0.0.0"
@@ -95,7 +95,11 @@ if __name__ == '__main__':
             break  
         except FloodWait as e:
             print(f"FloodWait! Sleeping for {e.value} seconds.")
-            time.sleep(e.value) 
+            try:
+                loop.run_until_complete(dreamxbotz.stop())
+            except Exception:
+                pass
+            loop.run_until_complete(asyncio.sleep(e.value))
         except KeyboardInterrupt:
             logging.info('Service Stopped Bye 👋')
             break
