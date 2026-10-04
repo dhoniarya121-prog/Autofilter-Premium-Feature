@@ -9,7 +9,7 @@ import string
 import pytz
 from .pmfilter import auto_filter 
 from Script import script
-from datetime import datetime, timedelta
+from datetime import datetime
 from database.refer import referdb
 from database.config_db import mdb
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup
@@ -18,7 +18,7 @@ from pyrogram.errors import FloodWait, ChatAdminRequired, UserNotParticipant
 from database.ia_filterdb import Media, Media2, get_file_details, unpack_new_file_id, get_bad_files
 from database.users_chats_db import db
 from info import *
-from utils import get_settings, save_group_settings, is_subscribed, is_req_subscribed, get_size, get_shortlink, is_check_admin, temp, get_readable_time, get_time, generate_settings_text, log_error, clean_filename, start_buttons, send_menu
+from utils import get_settings, save_group_settings, is_subscribed, is_req_subscribed, get_size, get_shortlink, is_check_admin, temp, get_readable_time, get_time, generate_settings_text, log_error, clean_filename
 import time
 
 
@@ -54,51 +54,72 @@ async def start(client, message):
     if len(m.command) == 2 and m.command[1].startswith(('notcopy', 'sendall')):
         _, userid, verify_id, file_id = m.command[1].split("_", 3)
         user_id = int(userid)
-        grp_id = temp.VERIFICATIONS.get(user_id, 0)
-        settings = await get_settings(grp_id)         
         verify_id_info = await db.get_verify_id_info(user_id, verify_id)
         if not verify_id_info or verify_id_info["verified"]:
-            return await message.reply("<b>ʟɪɴᴋ ᴇxᴘɪʀᴇᴅ ᴛʀʏ ᴀɢᴀɪɴ...</b>")  
-        
+            return await message.reply("<b>⏳ ʟɪɴᴋ ᴇxᴘɪʀᴇᴅ — ᴘʟᴇᴀsᴇ ʀᴇǫᴜᴇsᴛ ᴛʜᴇ ꜰɪʟᴇ ᴀɢᴀɪɴ.</b>", parse_mode=enums.ParseMode.HTML)
+        # group id is stored with the verify id (survives bot restarts); fall back to memory
+        grp_id = verify_id_info.get("grp_id") or temp.VERIFICATIONS.get(user_id, 0)
+        try:
+            settings = await get_settings(grp_id)
+        except Exception:
+            settings = {}
+
         ist_timezone = pytz.timezone('Asia/Kolkata')
         if await db.user_verified(user_id):
             key = "third_time_verified"
         else:
             key = "second_time_verified" if await db.is_user_verified(user_id) else "last_verified"
         current_time = datetime.now(tz=ist_timezone)
-        result = await db.update_notcopy_user(user_id, {key:current_time})
-        await db.update_verify_id_info(user_id, verify_id, {"verified":True})
-        if key == "third_time_verified": 
-            num = 3 
-        else: 
-            num =  2 if key == "second_time_verified" else 1 
-        if key == "third_time_verified": 
-            msg = script.THIRDT_VERIFY_COMPLETE_TEXT
+        await db.update_notcopy_user(user_id, {key: current_time})
+        await db.update_verify_id_info(user_id, verify_id, {"verified": True})
+        if key == "third_time_verified":
+            num, msg = 3, script.THIRDT_VERIFY_COMPLETE_TEXT
+        elif key == "second_time_verified":
+            num, msg = 2, script.SECOND_VERIFY_COMPLETE_TEXT
         else:
-            msg = script.SECOND_VERIFY_COMPLETE_TEXT if key == "second_time_verified" else script.VERIFY_COMPLETE_TEXT
+            num, msg = 1, script.VERIFY_COMPLETE_TEXT
         if message.command[1].startswith('sendall'):
             verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=allfiles_{grp_id}_{file_id}"
         else:
             verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=file_{grp_id}_{file_id}"
+        btn = [[
+            InlineKeyboardButton("🎬 ɴᴏᴛ ʀᴇᴄᴇɪᴠᴇᴅ? ᴛᴀᴘ ᴛᴏ ɢᴇᴛ ᴍᴏᴠɪᴇ", url=verifiedfiles),
+        ], [
+            InlineKeyboardButton("💎 ɢᴇᴛ ᴘʀᴇᴍɪᴜᴍ (ɴᴏ ᴠᴇʀɪꜰʏ)", callback_data="premium_info"),
+        ]]
+        reply_markup = InlineKeyboardMarkup(btn)
+        caption = msg.format(message.from_user.mention, get_readable_time(TWO_VERIFY_GAP))
+        # 1) show the completion message FIRST (never blocked by log-channel / image errors)
         try:
-            await client.send_message(settings['log'], script.VERIFIED_LOG_TEXT.format(m.from_user.mention, user_id, datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%d %B %Y'), num))
+            dlt = await m.reply_photo(
+                photo=VERIFY_IMG,
+                caption=caption,
+                reply_markup=reply_markup,
+                parse_mode=enums.ParseMode.HTML
+            )
         except Exception as e:
-            logger.warning(f"Verification log failed (check LOG_VR_CHANNEL): {e}")
-        # Verification complete -> show a big "get your movie" button
-        is_all = message.command[1].startswith('sendall')
-        btn = [
-            [InlineKeyboardButton("📦 ɢᴇᴛ ᴀʟʟ ꜰɪʟᴇꜱ ɴᴏᴡ" if is_all else "🎬 ɢᴇᴛ ʏᴏᴜʀ ᴍᴏᴠɪᴇ ɴᴏᴡ", url=verifiedfiles)],
-            [InlineKeyboardButton("📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ", url=UPDATE_CHNL_LNK)],
-        ]
-        reply_markup=InlineKeyboardMarkup(btn)
-        dlt=await send_menu(
-            m,
-            msg.format(message.from_user.mention, get_readable_time(TWO_VERIFY_GAP)),
-            reply_markup
-        )
-        await asyncio.sleep(300)
-        await dlt.delete()
-        return         
+            logger.warning(f"Verify image failed, sending text instead: {e}")
+            dlt = await m.reply_text(
+                caption,
+                reply_markup=reply_markup,
+                parse_mode=enums.ParseMode.HTML,
+                disable_web_page_preview=True
+            )
+        # 2) log (best effort)
+        try:
+            log_chat = settings.get('log') if settings else None
+            if log_chat:
+                await client.send_message(log_chat, script.VERIFIED_LOG_TEXT.format(
+                    m.from_user.mention, user_id,
+                    datetime.now(ist_timezone).strftime('%d %B %Y'), num))
+        except Exception as e:
+            logger.warning(f"Verification log failed: {e}")
+        # 3) auto-clean the notice without blocking the handler
+        asyncio.create_task(_delete_later(dlt, 300))
+        # 4) deliver the movie/file straight away (no extra click needed):
+        #    continue into the normal file-delivery flow below
+        deep = "allfiles" if message.command[1].startswith('sendall') else "file"
+        message.command = ["start", f"{deep}_{grp_id}_{file_id}"]
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         buttons = [[
                     InlineKeyboardButton('❤️ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❤️', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
@@ -117,7 +138,17 @@ async def start(client, message):
         await db.add_user(message.from_user.id, message.from_user.first_name)
         await client.send_message(LOG_CHANNEL, script.LOG_TEXT_P.format(message.from_user.id, message.from_user.mention))
     if len(message.command) != 2:
-        reply_markup = start_buttons()
+        buttons = [[
+                    InlineKeyboardButton(' ⌣🍒ᴄʜᴀɴɴᴇʟs ', callback_data='channel'),
+                    InlineKeyboardButton(' 🔍ɢʀᴏᴜᴘ ', callback_data='ɢʀᴏᴜᴘ')
+                ],[
+                    InlineKeyboardButton(' ʜᴇʟᴘ 😎', callback_data='help'),
+                    InlineKeyboardButton(' ᴀʙᴏᴜᴛ ᴍᴇ 📖', callback_data='about')
+                ],[
+                    InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
+                     InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
+                ]] 
+        reply_markup = InlineKeyboardMarkup(buttons)
         current_time = datetime.now(pytz.timezone(TIMEZONE))
         curr_time = current_time.hour        
         if curr_time < 12:
@@ -131,15 +162,27 @@ async def start(client, message):
         m=await message.reply_text("⏳")
         await asyncio.sleep(0.4)
         await m.delete()        
-        await send_menu(
-            message,
-            script.START_TXT.format(message.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME),
-            reply_markup
+        await message.reply_photo(
+            photo=random.choice(PICS),
+            caption=script.START_TXT.format(message.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME),
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
         )
         return
 
     if len(message.command) == 2 and message.command[1] in ["subscribe", "error", "okay", "help"]:
-        reply_markup = start_buttons()
+        buttons = [[
+                    InlineKeyboardButton(' ⌣🍒ᴄʜᴀɴɴᴇʟs ', callback_data='channel'),
+                    InlineKeyboardButton(' 🔍ɢʀᴏᴜᴘ ', callback_data='ɢʀᴏᴜᴘ')
+                ],[
+                    InlineKeyboardButton(' ʜᴇʟᴘ 😎', callback_data='help'),
+                    InlineKeyboardButton(' ᴀʙᴏᴜᴛ ᴍᴇ 📖', callback_data='about')
+                ],[
+                    InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
+                     InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
+                ]]
+                    
+        reply_markup = InlineKeyboardMarkup(buttons)
         current_time = datetime.now(pytz.timezone(TIMEZONE))
         curr_time = current_time.hour        
         if curr_time < 12:
@@ -153,10 +196,11 @@ async def start(client, message):
         m=await message.reply_text("⏳")
         await asyncio.sleep(0.4)
         await m.delete()        
-        await send_menu(
-            message,
-            script.START_TXT.format(message.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME),
-            reply_markup
+        await message.reply_photo(
+            photo=random.choice(PICS),
+            caption=script.START_TXT.format(message.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME),
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
         )
         return
     if message.command[1].startswith("reff_"):
@@ -179,14 +223,14 @@ async def start(client, message):
         except Exception:
             return 	    
         referdb.add_user(message.from_user.id)
-        fromuse = (referdb.get_refer_points(user_id) or 0) + 10
-        if fromuse >= 100:
+        fromuse = referdb.get_refer_points(user_id) + 10
+        if fromuse == 100:
             referdb.add_refer_points(user_id, 0) 
             await message.reply_text(f"🎉 𝗖𝗼𝗻𝗴𝗿𝗮𝘁𝘂𝗹𝗮𝘁𝗶𝗼𝗻𝘀! 𝗬𝗼𝘂 𝘄𝗼𝗻 𝟭𝟬 𝗥𝗲𝗳𝗲𝗿𝗿𝗮𝗹 𝗽𝗼𝗶𝗻𝘁 𝗯𝗲𝗰𝗮𝘂𝘀𝗲 𝗬𝗼𝘂 𝗵𝗮𝘃𝗲 𝗯𝗲𝗲𝗻 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝗜𝗻𝘃𝗶𝘁𝗲𝗱 ☞ {uss.mention}!")		    
-            await client.send_message(user_id, f"You have been successfully invited by {message.from_user.mention}!")
+            await message.reply_text(user_id, f"You have been successfully invited by {message.from_user.mention}!") 	
             seconds = 2592000
             if seconds > 0:
-                expiry_time = datetime.now() + timedelta(seconds=seconds)
+                expiry_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
                 user_data = {"id": user_id, "expiry_time": expiry_time}  # Using "id" instead of "user_id"  
                 await db.update_user(user_data)  # Use the update_user method to update or insert user data		    
                 await client.send_message(
@@ -208,10 +252,11 @@ async def start(client, message):
                     InlineKeyboardButton('❌ ᴄʟᴏꜱᴇ ❌', callback_data='close_data')
                   ]]
         reply_markup = InlineKeyboardMarkup(buttons)
-        await send_menu(
-            message,
-            script.PREPLANS_TXT.format(message.from_user.mention, OWNER_UPI_ID, QR_CODE),
-            reply_markup
+        await message.reply_photo(
+            photo=(SUBSCRIPTION),
+            caption=script.PREPLANS_TXT.format(message.from_user.mention, OWNER_UPI_ID, QR_CODE),
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
         )
         return  
     
@@ -295,7 +340,7 @@ async def start(client, message):
                         logger.warning(f"Free-file notice failed: {e}")
             if verify_needed and not free_granted:
                 verify_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
-                await db.create_verify_id(user_id, verify_id)
+                await db.create_verify_id(user_id, verify_id, grp_id)
                 temp.VERIFICATIONS[user_id] = grp_id
                 if message.command[1].startswith('allfiles'):
                     verify = await get_shortlink(f"https://telegram.me/{temp.U_NAME}?start=sendall_{user_id}_{verify_id}_{file_id}", grp_id, is_second_shortener, is_third_shortener)
@@ -306,9 +351,9 @@ async def start(client, message):
                 else:
                     howtodownload = settings.get('tutorial_2', TUTORIAL_2) if is_second_shortener else settings.get('tutorial', TUTORIAL)
                 buttons = [[
-                    InlineKeyboardButton(text="♻️ ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ ᴠᴇʀɪꜰʏ ♻️", url=verify)
+                    InlineKeyboardButton(text="🔐 ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ ᴠᴇʀɪꜰʏ", url=verify)
                 ],[
-                    InlineKeyboardButton(text="⁉️ ʜᴏᴡ ᴛᴏ ᴠᴇʀɪꜰʏ ⁉️", url=howtodownload)
+                    InlineKeyboardButton(text="❓ ʜᴏᴡ ᴛᴏ ᴠᴇʀɪꜰʏ", url=howtodownload)
                 ]]
                 reply_markup=InlineKeyboardMarkup(buttons)
                 if await db.user_verified(user_id): 
@@ -353,13 +398,11 @@ async def start(client, message):
         try:
             files = temp.GETALL.get(file_id)
             if not files:
-                return await message.reply('<b><i>⚠️ ᴛʜɪꜱ ꜱᴇᴀʀᴄʜ ʀᴇꜱᴜʟᴛ ᴇxᴘɪʀᴇᴅ, ᴘʟᴇᴀꜱᴇ ꜱᴇᴀʀᴄʜ ᴀɢᴀɪɴ.</i></b>')
+                return await message.reply('<b><i>ɴᴏ ꜱᴜᴄʜ ꜰɪʟᴇ ᴇxɪꜱᴛꜱ !</b></i>')
             filesarr = []
             for file in files:
                 file_id = file.file_id
                 files_ = await get_file_details(file_id)
-                if not files_:
-                    continue
                 files1 = files_[0]
                 title = clean_filename(files1.file_name)
                 size = get_size(files1.file_size)
@@ -378,7 +421,7 @@ async def start(client, message):
                 if STREAM_MODE and not PREMIUM_STREAM_MODE:
                     
                     btn = [
-                        [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'generate_stream_link:{file_id}')],
+                        [InlineKeyboardButton('🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ  •  ▶️ ᴡᴀᴛᴄʜ', callback_data=f'generate_stream_link:{file_id}')],
                         [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
                     ]
                 elif STREAM_MODE and PREMIUM_STREAM_MODE:
@@ -386,13 +429,13 @@ async def start(client, message):
                     if not is_premium:
                         
                         btn = [
-                            [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'prestream')],
+                            [InlineKeyboardButton('🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ  •  ▶️ ᴡᴀᴛᴄʜ', callback_data=f'prestream')],
                             [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
                         ]
                     else:
                         
                         btn = [
-                            [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'generate_stream_link:{file_id}')],
+                            [InlineKeyboardButton('🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ  •  ▶️ ᴡᴀᴛᴄʜ', callback_data=f'generate_stream_link:{file_id}')],
                             [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
                         ]
                 else:
@@ -405,23 +448,14 @@ async def start(client, message):
                     reply_markup=InlineKeyboardMarkup(btn)
                 )
                 filesarr.append(msg)
-            if not filesarr:
-                return await message.reply('<b><i>ɴᴏ ꜱᴜᴄʜ ꜰɪʟᴇ ᴇxɪꜱᴛꜱ !</i></b>')
             k = await client.send_message(chat_id=message.from_user.id, text=script.DEL_MSG.format(get_time(DELETE_TIME)), parse_mode=enums.ParseMode.HTML)
             await asyncio.sleep(DELETE_TIME)
             for x in filesarr:
-                try:
-                    await x.delete()
-                except Exception:
-                    pass
+                await x.delete()
             await k.edit_text("<b>ʏᴏᴜʀ ᴀʟʟ ᴠɪᴅᴇᴏꜱ/ꜰɪʟᴇꜱ ᴀʀᴇ ᴅᴇʟᴇᴛᴇᴅ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ !\nᴋɪɴᴅʟʏ ꜱᴇᴀʀᴄʜ ᴀɢᴀɪɴ</b>")
             return
         except Exception as e:
             logger.exception(e)
-            try:
-                await message.reply('<b>⚠️ ꜱᴏᴍᴇᴛʜɪɴɢ ᴡᴇɴᴛ ᴡʀᴏɴɢ ᴡʜɪʟᴇ ꜱᴇɴᴅɪɴɢ ꜰɪʟᴇꜱ. ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ.</b>')
-            except Exception:
-                pass
             return
 
     user = message.from_user.id
@@ -431,18 +465,18 @@ async def start(client, message):
         try:
             if STREAM_MODE and not PREMIUM_STREAM_MODE:
                 btn = [
-                    [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'generate_stream_link:{file_id}')],
+                    [InlineKeyboardButton('🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ  •  ▶️ ᴡᴀᴛᴄʜ', callback_data=f'generate_stream_link:{file_id}')],
                     [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
                 ]
             elif STREAM_MODE and PREMIUM_STREAM_MODE:
                 if not is_premium:
                    btn = [
-                        [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'prestream')],
+                        [InlineKeyboardButton('🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ  •  ▶️ ᴡᴀᴛᴄʜ', callback_data=f'prestream')],
                         [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
                     ]
                 else:
                     btn = [
-                        [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'generate_stream_link:{file_id}')],
+                        [InlineKeyboardButton('🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ  •  ▶️ ᴡᴀᴛᴄʜ', callback_data=f'generate_stream_link:{file_id}')],
                         [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
                     ]
             else:
@@ -500,18 +534,18 @@ async def start(client, message):
     
     if STREAM_MODE and not PREMIUM_STREAM_MODE:
         btn = [
-            [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'generate_stream_link:{file_id}')],
+            [InlineKeyboardButton('🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ  •  ▶️ ᴡᴀᴛᴄʜ', callback_data=f'generate_stream_link:{file_id}')],
             [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
         ]
     elif STREAM_MODE and PREMIUM_STREAM_MODE:
         if not is_premium:
             btn = [
-                [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'prestream')],
+                [InlineKeyboardButton('🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ  •  ▶️ ᴡᴀᴛᴄʜ', callback_data=f'prestream')],
                 [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
             ]
         else:
             btn = [
-                [InlineKeyboardButton('🚀 ꜰᴀꜱᴛ ᴅᴏᴡɴʟᴏᴀᴅ / ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ 🖥️', callback_data=f'generate_stream_link:{file_id}')],
+                [InlineKeyboardButton('🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ  •  ▶️ ᴡᴀᴛᴄʜ', callback_data=f'generate_stream_link:{file_id}')],
                 [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=UPDATE_CHNL_LNK)]  # Keep this line unchanged  
             ]
     else:
@@ -887,8 +921,7 @@ async def deletemultiplefiles(bot, message):
     await message.reply_text(
         text=f"<b>Found {total} files for your query {keyword} !\n\nDo you want to delete?</b>",
         reply_markup=InlineKeyboardMarkup(btn),
-        parse_mode=enums.ParseMode.HTML,
-        disable_web_page_preview=True
+        parse_mode=enums.ParseMode.HTML
     )
 
 
