@@ -1,5 +1,6 @@
 from aiohttp import web
 import re
+import asyncio
 import math
 import logging
 import secrets
@@ -72,40 +73,49 @@ async def stream_handler(request: web.Request):
 class_cache = {}
 
 async def media_streamer(request: web.Request, id: int, secure_hash: str):
-    range_header = request.headers.get("Range", 0)
-    
+    range_header = request.headers.get("Range", "")
+
     index = min(work_loads, key=work_loads.get)
     faster_client = multi_clients[index]
-    
-    if MULTI_CLIENT:
-        logging.info(f"Client {index} is now serving {request.remote}")
 
     if faster_client in class_cache:
         tg_connect = class_cache[faster_client]
-        logging.debug(f"Using cached ByteStreamer object for client {index}")
     else:
-        logging.debug(f"Creating new ByteStreamer object for client {index}")
         tg_connect = ByteStreamer(faster_client)
         class_cache[faster_client] = tg_connect
-    logging.debug("before calling get_file_properties")
+
     file_id = await tg_connect.get_file_properties(id)
-    logging.debug("after calling get_file_properties")
-    
+
     if file_id.unique_id[:6] != secure_hash:
         logging.debug(f"Invalid hash for message with ID {id}")
         raise InvalidHash
-    
+
     file_size = file_id.file_size
 
-    if range_header:
-        from_bytes, until_bytes = range_header.replace("bytes=", "").split("-")
-        from_bytes = int(from_bytes)
-        until_bytes = int(until_bytes) if until_bytes else file_size - 1
-    else:
-        from_bytes = request.http_range.start or 0
-        until_bytes = (request.http_range.stop or file_size) - 1
+    # ---- Range parsing (supports "a-b", "a-" and suffix "-n") ----
+    try:
+        if range_header:
+            raw_range = range_header.replace("bytes=", "").split(",")[0].strip()
+            start_s, end_s = raw_range.split("-", 1)
+            if start_s == "":
+                suffix = int(end_s)
+                from_bytes = max(file_size - suffix, 0)
+                until_bytes = file_size - 1
+            else:
+                from_bytes = int(start_s)
+                until_bytes = int(end_s) if end_s else file_size - 1
+        else:
+            from_bytes = 0
+            until_bytes = file_size - 1
+    except ValueError:
+        return web.Response(
+            status=416,
+            body="416: Range not satisfiable",
+            headers={"Content-Range": f"bytes */{file_size}"},
+        )
 
-    if (until_bytes > file_size) or (from_bytes < 0) or (until_bytes < from_bytes):
+    until_bytes = min(until_bytes, file_size - 1)
+    if from_bytes < 0 or until_bytes < from_bytes or from_bytes >= file_size:
         return web.Response(
             status=416,
             body="416: Range not satisfiable",
@@ -113,17 +123,14 @@ async def media_streamer(request: web.Request, id: int, secure_hash: str):
         )
 
     chunk_size = 1024 * 1024
-    until_bytes = min(until_bytes, file_size - 1)
-
     offset = from_bytes - (from_bytes % chunk_size)
     first_part_cut = from_bytes - offset
     last_part_cut = until_bytes % chunk_size + 1
 
     req_length = until_bytes - from_bytes + 1
-    part_count = math.ceil(until_bytes / chunk_size) - math.floor(offset / chunk_size)
-    body = tg_connect.yield_file(
-        file_id, index, offset, first_part_cut, last_part_cut, part_count, chunk_size
-    )
+    # inclusive chunk count (the old formula dropped a chunk when the range
+    # ended exactly on a 1 MB boundary)
+    part_count = (until_bytes // chunk_size) - (offset // chunk_size) + 1
 
     mime_type = file_id.mime_type
     file_name = file_id.file_name
@@ -137,19 +144,34 @@ async def media_streamer(request: web.Request, id: int, secure_hash: str):
                 file_name = f"{secrets.token_hex(2)}.unknown"
     else:
         if file_name:
-            mime_type = mimetypes.guess_type(file_id.file_name)
+            mime_type = mimetypes.guess_type(file_name)[0] or "application/octet-stream"
         else:
             mime_type = "application/octet-stream"
             file_name = f"{secrets.token_hex(2)}.unknown"
 
-    return web.Response(
-        status=206 if range_header else 200,
-        body=body,
-        headers={
-            "Content-Type": f"{mime_type}",
-            "Content-Range": f"bytes {from_bytes}-{until_bytes}/{file_size}",
-            "Content-Length": str(req_length),
-            "Content-Disposition": f'{disposition}; filename="{file_name}"',
-            "Accept-Ranges": "bytes",
-        },
+    headers = {
+        "Content-Type": f"{mime_type}",
+        "Content-Length": str(req_length),
+        "Content-Disposition": f'{disposition}; filename="{file_name}"',
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "public, max-age=3600",
+    }
+    if range_header:
+        headers["Content-Range"] = f"bytes {from_bytes}-{until_bytes}/{file_size}"
+
+    resp = web.StreamResponse(status=206 if range_header else 200, headers=headers)
+    await resp.prepare(request)
+    if request.method == "HEAD":
+        return resp
+
+    body = tg_connect.yield_file(
+        file_id, index, offset, first_part_cut, last_part_cut, part_count, chunk_size
     )
+    try:
+        async for chunk in body:
+            await resp.write(chunk)
+        await resp.write_eof()
+    except (ConnectionResetError, ConnectionError, asyncio.CancelledError):
+        # viewer seeked / closed the player: stop pulling from Telegram
+        await body.aclose()
+    return resp
