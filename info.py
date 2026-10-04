@@ -241,7 +241,7 @@ else:
 HAS_SSL = is_enabled(str(getenv('HAS_SSL', True)), True)
 if HAS_SSL:
     URL = "https://{}/".format(FQDN)
-    else:
+else:
     URL = "http://{}/".format(FQDN)
 
 # ============================
