@@ -914,6 +914,7 @@ async def get_cap(settings, remaining_seconds, files, query, total_results, sear
 # ============================================================
 #  Beautiful button + background-photo helpers
 # ============================================================
+from pyrogram.types import InputMediaPhoto as _InputMediaPhoto
 
 
 def start_buttons():
@@ -933,20 +934,26 @@ def back_btn(cb='start', label='🏠 ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ'):
 
 
 async def edit_menu(query, text, buttons, pic=None):
-    """Edit the current menu message in place (text only, no background photo).
-    Falls back to editing the caption if the message happens to be a media message."""
+    """Edit the current menu message so it always shows the background photo.
+    Falls back to a plain text edit if the message cannot carry media."""
     markup = buttons if isinstance(buttons, InlineKeyboardMarkup) else InlineKeyboardMarkup(buttons)
     try:
-        await query.message.edit_text(text, reply_markup=markup,
-                                      parse_mode=enums.ParseMode.HTML,
-                                      disable_web_page_preview=True)
+        await query.message.edit_media(
+            media=_InputMediaPhoto(pic or BG_PIC, caption=text, parse_mode=enums.ParseMode.HTML),
+            reply_markup=markup,
+        )
     except MessageNotModified:
         pass
     except Exception:
         try:
-            await query.message.edit_caption(text, reply_markup=markup,
-                                             parse_mode=enums.ParseMode.HTML)
+            await query.message.edit_text(text, reply_markup=markup,
+                                          parse_mode=enums.ParseMode.HTML,
+                                          disable_web_page_preview=True)
         except MessageNotModified:
             pass
-        except Exception as e:
-            logger.warning(f"edit_menu failed: {e}")
+        except Exception:
+            try:
+                await query.message.edit_caption(text, reply_markup=markup,
+                                                 parse_mode=enums.ParseMode.HTML)
+            except Exception:
+                pass
