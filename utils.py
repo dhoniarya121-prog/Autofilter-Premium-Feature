@@ -366,7 +366,7 @@ async def search_gagala(text):
         }
     text = text.replace(" ", '+')
     url = f'https://www.google.com/search?q={text}'
-    response = requests.get(url, headers=usr_agent)
+    response = await asyncio.to_thread(requests.get, url, headers=usr_agent, timeout=15)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, 'html.parser')
     titles = soup.find_all( 'h3' )
