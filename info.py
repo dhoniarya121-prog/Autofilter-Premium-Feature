@@ -36,6 +36,9 @@ PICS = (environ.get('PICS', 'https://graph.org/file/56b5deb73f3b132e2bb73.jpg ht
 NOR_IMG = environ.get("NOR_IMG", "https://graph.org/file/e20b5fdaf217252964202.jpg")
 MELCOW_PHOTO = environ.get("MELCOW_PHOTO", "https://graph.org/file/56b5deb73f3b132e2bb73.jpg")
 SPELL_IMG = environ.get("SPELL_IMG", "https://graph.org/file/13702ae26fb05df52667c.jpg")
+# Background photo used on every bot menu (Start / Help / About / Channels / Group ...).
+# Default is the bundled image; set BG_PIC env var to a URL or file path to change it.
+BG_PIC = environ.get('BG_PIC', 'assets/bot_bg.jpg')
 SUBSCRIPTION = (environ.get('SUBSCRIPTION', 'https://graph.org/file/242b7f1b52743938d81f1.jpg'))
 FSUB_PICS = (environ.get('FSUB_PICS', 'https://graph.org/file/7478ff3eac37f4329c3d8.jpg https://graph.org/file/56b5deb73f3b132e2bb73.jpg')).split()  # Fsub pic
 
@@ -247,7 +250,10 @@ else:
 # ============================
 # Reactions Configuration
 # ============================
-REACTIONS = ["🤝", "😇", "🤗", "😍", "👍", "🎅", "😐", "🥰", "🤩", "😱", "🤣", "😘", "👏", "😛", "😈", "🎉", "⚡️", "🫡", "🤓", "😎", "🏆", "🔥", "🤭", "🌚", "🆒", "👻", "😁"]
+REACTIONS = ["🤝", "😇", "🤗", "😍", "👍", "🎅", "😐", "🥰", "🤩", "😱", "🤣", "😘", "👏", "😛", "😈", "🎉", "⚡️", "🫡", "🤓", "😎", "🏆", "🔥", "🤭", "🌚", "🆒", "👻", "😁",
+             # --- 20 new reactions ---
+             "🤯", "🙏", "👌", "🕊", "🤡", "🥴", "🐳", "💯", "🍓", "🍾",
+             "💋", "😭", "👀", "🎃", "🙈", "🎄", "💅", "🗿", "🦄", "👾"]
 
 # ============================
 # Commands Bot
