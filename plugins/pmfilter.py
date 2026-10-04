@@ -1,4 +1,4 @@
-from utils import get_size, is_subscribed, is_req_subscribed, group_setting_buttons, get_poster, get_posterx, temp, get_settings, save_group_settings, get_cap, imdb, is_check_admin, extract_request_content, log_error, clean_filename, generate_season_variations, clean_search_text
+from utils import start_buttons, edit_menu, back_btn, get_size, is_subscribed, is_req_subscribed, group_setting_buttons, get_poster, get_posterx, temp, get_settings, save_group_settings, get_cap, imdb, is_check_admin, extract_request_content, log_error, clean_filename, generate_season_variations, clean_search_text
 import tracemalloc
 from fuzzywuzzy import process
 from dreamxbotz.util.file_properties import get_name, get_hash
@@ -150,18 +150,11 @@ async def refercall(bot, query):
         InlineKeyboardButton('Back', callback_data='premium_info')
     ]]
     reply_markup = InlineKeyboardMarkup(btn)
-    try:
-        await bot.edit_message_media(
-            query.message.chat.id,
-            query.message.id,
-            InputMediaPhoto("https://graph.org/file/1a2e64aee3d4d10edd930.jpg")
-        )
-    except Exception as e:    
-        pass
     await query.message.edit_text(
         text=f'Hay Your refer link:\n\nhttps://t.me/{bot.me.username}?start=reff_{query.from_user.id}\n\nShare this link with your friends, Each time they join,  you will get 10 refferal points and after 100 points you will get 1 month premium subscription.',
         reply_markup=reply_markup,
-        parse_mode=enums.ParseMode.HTML
+        parse_mode=enums.ParseMode.HTML,
+        disable_web_page_preview=True
     )
     await query.answer()
 
@@ -907,10 +900,12 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data.startswith("sendfiles"):
         clicked = query.from_user.id
         ident, key = query.data.split("#")
-        if SENDALL_PREMIUM_ONLY and clicked not in ADMINS and not await db.has_premium_access(clicked):
+        if SENDALL_PREMIUM_ONLY and clicked not in ADMINS and not await _user_is_premium(clicked):
             await query.answer("🔒 Send All is a Premium feature!\n\nBuy Premium to get all files at once. Check /plan", show_alert=True)
             return
-        settings = await get_settings(query.message.chat.id)
+        if not temp.GETALL.get(key):
+            await query.answer("⚠️ ᴛʜɪꜱ ꜱᴇᴀʀᴄʜ ʀᴇꜱᴜʟᴛ ᴇxᴘɪʀᴇᴅ. ᴘʟᴇᴀꜱᴇ ꜱᴇᴀʀᴄʜ ᴀɢᴀɪɴ.", show_alert=True)
+            return
         try:
             await query.answer(url=f"https://telegram.me/{temp.U_NAME}?start=allfiles_{query.message.chat.id}_{key}")
             return
@@ -1470,17 +1465,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         await query.answer(text=script.SINFO, show_alert=True)
 
     elif query.data == "start":
-        buttons = [[
-                    InlineKeyboardButton(' ⌣🍒ᴄʜᴀɴɴᴇʟs ', callback_data='channel'),
-                    InlineKeyboardButton(' 🔍ɢʀᴏᴜᴘ ', callback_data='ɢʀᴏᴜᴘ'),
-                ],[
-                    InlineKeyboardButton(' ʜᴇʟᴘ 😎', callback_data='help'),
-                    InlineKeyboardButton(' ᴀʙᴏᴜᴛ ᴍᴇ 📖', callback_data='about')
-                ],[
-                    InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
-                     InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
-                ]]
-        reply_markup = InlineKeyboardMarkup(buttons)
+        reply_markup = start_buttons()
         current_time = datetime.now(pytz.timezone(TIMEZONE))
         curr_time = current_time.hour
         if curr_time < 12:
@@ -1491,70 +1476,27 @@ async def cb_handler(client: Client, query: CallbackQuery):
             gtxt = "ɢᴏᴏᴅ ᴇᴠᴇɴɪɴɢ 🌘"
         else:
             gtxt = "ɢᴏᴏᴅ ɴɪɢʜᴛ 🌑"
-        try:
-            await client.edit_message_media(
-                query.message.chat.id,
-                query.message.id,
-                InputMediaPhoto(random.choice(PICS))
-            )
-        except Exception as e:
-            pass
-        await query.message.edit_text(
-            text=script.START_TXT.format(query.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME),
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
-        )
+        await edit_menu(query, script.START_TXT.format(query.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME), reply_markup)
         await query.answer(MSG_ALRT)
 
     elif query.data == "donation":
-        buttons = [[
-                InlineKeyboardButton('🌲 Sᴇɴᴅ Dᴏɴᴀᴛᴇ Sᴄʀᴇᴇɴsʜᴏᴛ Hᴇʀᴇ', url=OWNER_LNK)
-            ],[
-                InlineKeyboardButton('⇍ ʙᴀᴄᴋ ⇏', callback_data='about')
-            ]]
-        reply_markup = InlineKeyboardMarkup(buttons)
-        await query.message.edit_text(text="● ◌ ◌")
-        await query.message.edit_text(text="● ● ◌")
-        await query.message.edit_text(text="● ● ●")
-        reply_markup = InlineKeyboardMarkup(buttons)
-        await client.edit_message_media(
-            query.message.chat.id,
-            query.message.id,
-            InputMediaPhoto('https://graph.org/file/99eebf5dbe8a134f548e0.jpg')
-        )
-        await query.message.edit_text(
-            text=script.DREAMXBOTZ_DONATION.format(query.from_user.mention, QR_CODE, OWNER_UPI_ID),
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
-        )
+        buttons = [
+            [InlineKeyboardButton('💝 sᴇɴᴅ ᴅᴏɴᴀᴛɪᴏɴ sᴄʀᴇᴇɴsʜᴏᴛ', url=OWNER_LNK)],
+            back_btn('about', '◀️ ʙᴀᴄᴋ'),
+        ]
+        await edit_menu(query, script.DREAMXBOTZ_DONATION.format(query.from_user.mention, QR_CODE, OWNER_UPI_ID), buttons)
 
     elif query.data == "help":
-        buttons = [[
-            InlineKeyboardButton('⇋ ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ ⇋', callback_data='start')
-        ]]
-        reply_markup = InlineKeyboardMarkup(buttons)
-        await query.message.edit_text(
-            text=script.HELP_TXT,
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
-        )
-    
+        await edit_menu(query, script.HELP_TXT, [back_btn()])
+
     elif query.data == "about":
-        buttons = [[
-            InlineKeyboardButton('‼️ ᴅɪꜱᴄʟᴀɪᴍᴇʀ ‼️', callback_data='disclaimer'),
-            InlineKeyboardButton ('🪔 sᴏᴜʀᴄᴇ', callback_data='source'),
-        ],[
-            InlineKeyboardButton('ᴅᴏɴᴀᴛɪᴏɴ 💰', callback_data='donation'),
-        ],[
-            InlineKeyboardButton('⇋ ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ ⇋', callback_data='start')
-        ]]
-        reply_markup = InlineKeyboardMarkup(buttons)
-        await query.message.edit_text(
-            text=script.ABOUT_TXT.format(temp.U_NAME, temp.B_NAME, OWNER_LNK),
-            reply_markup=reply_markup,
-            disable_web_page_preview=True,
-            parse_mode=enums.ParseMode.HTML
-        )
+        buttons = [
+            [InlineKeyboardButton('⚠️ ᴅɪꜱᴄʟᴀɪᴍᴇʀ', callback_data='disclaimer'),
+             InlineKeyboardButton('🪔 ꜱᴏᴜʀᴄᴇ', callback_data='source')],
+            [InlineKeyboardButton('💰 ᴅᴏɴᴀᴛɪᴏɴ', callback_data='donation')],
+            back_btn(),
+        ]
+        await edit_menu(query, script.ABOUT_TXT.format(temp.U_NAME, temp.B_NAME, OWNER_LNK), buttons)
 
     elif query.data == "give_trial":
         try:
@@ -1594,72 +1536,51 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
 
     elif query.data == "source":
-        buttons = [[
-            InlineKeyboardButton('ADMIN📜', url='https://t.me/roaroic0'),
-            InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
-        ]]
-        reply_markup = InlineKeyboardMarkup(buttons)
-        await query.message.edit_text(
-            text=script.SOURCE_TXT,
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
-        )
+        buttons = [
+            [InlineKeyboardButton('👤 ᴀᴅᴍɪɴ', url='https://t.me/roaroic0')],
+            back_btn('about', '◀️ ʙᴀᴄᴋ'),
+        ]
+        await edit_menu(query, script.SOURCE_TXT, buttons)
 
     elif query.data == "ɢʀᴏᴜᴘ":
-        buttons = [[
-            InlineKeyboardButton('SEARCH GROUP 🏢', url='https://t.me/roaroicgroup'),
-            InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
-        ]]
-        reply_markup = InlineKeyboardMarkup(buttons)
-        await query.message.edit_text(
-            text=script.GROUP_TXT,
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
-        ) 
-    
+        buttons = [
+            [InlineKeyboardButton('🏢 ᴊᴏɪɴ ꜱᴇᴀʀᴄʜ ɢʀᴏᴜᴘ', url='https://t.me/roaroicgroup')],
+            back_btn(),
+        ]
+        await edit_menu(query, script.GROUP_TXT, buttons)
+
     elif query.data == "channel":
-        buttons = [[
-            InlineKeyboardButton('UPDATE CHANNEL ִֶָ🔄', url='https://t.me/roaroic1'),
-            InlineKeyboardButton('MAIN CHANNEL ִֶָ🍿', url='https://t.me/roaroic0'),
-            InlineKeyboardButton('NOTIFICATION CHANNEL 🚨', url='https://t.me/+vNAhFBYrIQg5ZTk9') 
-        ], [ InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
-        ]]
-        reply_markup = InlineKeyboardMarkup(buttons)
-        await query.message.edit_text(
-            text=script.CHANNEL_TXT,
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
-        )
+        buttons = [
+            [InlineKeyboardButton('🔄 ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url='https://t.me/roaroic1'),
+             InlineKeyboardButton('🍿 ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/roaroic0')],
+            [InlineKeyboardButton('🚨 ɴᴏᴛɪꜰɪᴄᴀᴛɪᴏɴ ᴄʜᴀɴɴᴇʟ', url='https://t.me/+vNAhFBYrIQg5ZTk9')],
+            back_btn(),
+        ]
+        await edit_menu(query, script.CHANNEL_TXT, buttons)
 
     elif query.data == "ref_point":
         await query.answer(f'You Have: {referdb.get_refer_points(query.from_user.id)} Refferal points.', show_alert=True)
 
     elif query.data == "disclaimer":
-            btn = [[
-                    InlineKeyboardButton("⇋ ʙᴀᴄᴋ ⇋", callback_data="about")
-                  ]]
-            reply_markup = InlineKeyboardMarkup(btn)
-            await query.message.edit_text(
-                text=(script.DISCLAIMER_TXT),
-                reply_markup=reply_markup,
-                parse_mode=enums.ParseMode.HTML
-            )
+        await edit_menu(query, script.DISCLAIMER_TXT, [back_btn('about', '◀️ ʙᴀᴄᴋ')])
 
     elif query.data == "premium_info":
         try:
             btn = [[
-                InlineKeyboardButton('• ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ •', callback_data='buy_info'),
+                InlineKeyboardButton('💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ 💎', callback_data='buy_info'),
             ],[
-                InlineKeyboardButton('• ʀᴇꜰᴇʀ ꜰʀɪᴇɴᴅꜱ', callback_data='reffff'),
-                InlineKeyboardButton('ꜰʀᴇᴇ ᴛʀɪᴀʟ •', callback_data='give_trial')
+                InlineKeyboardButton('🎁 ʀᴇꜰᴇʀ ꜰʀɪᴇɴᴅꜱ', callback_data='reffff'),
+                InlineKeyboardButton('🆓 ꜰʀᴇᴇ ᴛʀɪᴀʟ', callback_data='give_trial')
             ],[
-                InlineKeyboardButton('⇋ ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ ⇋', callback_data='start')
+                InlineKeyboardButton('🏠 ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ', callback_data='start')
             ]]
             reply_markup = InlineKeyboardMarkup(btn)
-            await client.edit_message_media(
+            await client.edit_message_text(
                 chat_id=query.message.chat.id,
                 message_id=query.message.id,
-                media=InputMediaPhoto(media=SUBSCRIPTION, caption=script.BPREMIUM_TXT, parse_mode=enums.ParseMode.HTML),
+                text=script.BPREMIUM_TXT,
+                parse_mode=enums.ParseMode.HTML,
+                disable_web_page_preview=True,
                 reply_markup=reply_markup
             )
         except Exception as e:
@@ -1669,16 +1590,18 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "buy_info":
         try:
             btn = [[
-                InlineKeyboardButton('ꜱᴛᴀʀ', callback_data='star_info'),
-                InlineKeyboardButton('ᴜᴘɪ', callback_data='upi_info')
+                InlineKeyboardButton('⭐ ꜱᴛᴀʀꜱ', callback_data='star_info'),
+                InlineKeyboardButton('📲 ᴜᴘɪ', callback_data='upi_info')
             ],[
-                InlineKeyboardButton('⇋ ʙᴀᴄᴋ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ ⇋', callback_data='premium_info')
+                InlineKeyboardButton('◀️ ʙᴀᴄᴋ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ', callback_data='premium_info')
             ]]
             reply_markup = InlineKeyboardMarkup(btn)
-            await client.edit_message_media(
+            await client.edit_message_text(
                 chat_id=query.message.chat.id,
                 message_id=query.message.id,
-                media=InputMediaPhoto(media=SUBSCRIPTION, caption=script.PREMIUM_TEXT, parse_mode=enums.ParseMode.HTML),
+                text=script.PREMIUM_TEXT,
+                parse_mode=enums.ParseMode.HTML,
+                disable_web_page_preview=True,
                 reply_markup=reply_markup
             )
         except Exception as e:
@@ -1687,15 +1610,17 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "upi_info":
         try:
             btn = [[
-                InlineKeyboardButton('• ꜱᴇɴᴅ  ᴘᴀʏᴍᴇɴᴛ ꜱᴄʀᴇᴇɴꜱʜᴏᴛ •', url=OWNER_LNK),
+                InlineKeyboardButton('📤 ꜱᴇɴᴅ ᴘᴀʏᴍᴇɴᴛ ꜱᴄʀᴇᴇɴꜱʜᴏᴛ', url=OWNER_LNK),
             ],[
-                InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='buy_info')
+                InlineKeyboardButton('◀️ ʙᴀᴄᴋ', callback_data='buy_info')
             ]]
             reply_markup = InlineKeyboardMarkup(btn)
-            await client.edit_message_media(
+            await client.edit_message_text(
                 chat_id=query.message.chat.id,
                 message_id=query.message.id,
-                media=InputMediaPhoto(media=SUBSCRIPTION, caption=script.PREMIUM_UPI_TEXT.format(OWNER_UPI_ID), parse_mode=enums.ParseMode.HTML),
+                text=script.PREMIUM_UPI_TEXT.format(OWNER_UPI_ID),
+                parse_mode=enums.ParseMode.HTML,
+                disable_web_page_preview=True,
                 reply_markup=reply_markup
             )
         except Exception as e:
@@ -1710,10 +1635,12 @@ async def cb_handler(client: Client, query: CallbackQuery):
             buttons = [btn[i:i + 2] for i in range(0, len(btn), 2)]
             buttons.append([InlineKeyboardButton("⋞ ʙᴀᴄᴋ", callback_data="buy_info")])
             reply_markup = InlineKeyboardMarkup(buttons)
-            await client.edit_message_media(
+            await client.edit_message_text(
                 chat_id=query.message.chat.id,
                 message_id=query.message.id,
-                media=InputMediaPhoto(media=SUBSCRIPTION, caption=script.PREMIUM_STAR_TEXT, parse_mode=enums.ParseMode.HTML),
+                text=script.PREMIUM_STAR_TEXT,
+                parse_mode=enums.ParseMode.HTML,
+                disable_web_page_preview=True,
                 reply_markup=reply_markup
             )
         except Exception as e:
