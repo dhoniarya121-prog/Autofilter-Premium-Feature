@@ -1,6 +1,47 @@
 services:
   - type: web
     name: autofilter-premium-feature
-    runtime: node
-    buildCommand: npm install
-    startCommand: npm start
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free            # use "starter" for 24/7 without sleeping
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # ---- required ----
+      - key: API_ID
+        sync: false
+      - key: API_HASH
+        sync: false
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMINS
+        sync: false          # space separated user ids
+      - key: DATABASE_URI
+        sync: false          # MongoDB Atlas connection string
+      - key: DATABASE_NAME
+        value: Cluster0
+      - key: CHANNELS
+        sync: false          # space separated file channel ids
+      - key: LOG_CHANNEL
+        sync: false
+      - key: BIN_CHANNEL
+        sync: false          # stream/download links are built from this channel
+      - key: PREMIUM_LOGS
+        sync: false
+      # ---- optional ----
+      - key: SHORTENER_API
+        sync: false
+      - key: SHORTENER_API2
+        sync: false
+      - key: SHORTENER_API3
+        sync: false
+      - key: TMDB_API_KEY
+        sync: false
+      - key: TRENDING_PREMIUM_ONLY
+        value: "True"
+      - key: ULTRA_FAST_MODE
+        value: "True"
+      - key: PORT
+        value: "8080"
+      - key: PYTHONUNBUFFERED
+        value: "1"
