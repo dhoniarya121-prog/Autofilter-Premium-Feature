@@ -109,17 +109,17 @@ TUTORIAL_2 = environ.get("TUTORIAL_2", "https://t.me/kingo_serial")   # Second t
 TUTORIAL_3 = environ.get("TUTORIAL_3", "https://t.me/kingo_serial")   # Third tutorial link for verification
 
 # Verification (Must Fill All Veriables. Else You Got Error
-SHORTENER_API = environ.get("SHORTENER_API", "67088d44ce41560a1129a9ed28bf7793bc15fbed") # Shortener API key
-SHORTENER_WEBSITE = environ.get("SHORTENER_WEBSITE", "linkpays.in") # Shortener website
+SHORTENER_API = environ.get("SHORTENER_API", "1e72bd1274625811043cb1d1ca2dbcbe77e9fdd2") # Shortener API key
+SHORTENER_WEBSITE = environ.get("SHORTENER_WEBSITE", "vplink.in") # Shortener website
 
-SHORTENER_API2 = environ.get("SHORTENER_API2", "67088d44ce41560a1129a9ed28bf7793bc15fbed")  # Shortener API key for second website
-SHORTENER_WEBSITE2 = environ.get("SHORTENER_WEBSITE2", "linkpays.in") # Shortener website for second website
+SHORTENER_API2 = environ.get("SHORTENER_API2", "1e72bd1274625811043cb1d1ca2dbcbe77e9fdd2")  # Shortener API key for second website
+SHORTENER_WEBSITE2 = environ.get("SHORTENER_WEBSITE2", "vplink.in") # Shortener website for second website
 
-SHORTENER_API3 = environ.get("SHORTENER_API3", "67088d44ce41560a1129a9ed28bf7793bc15fbed")  
-SHORTENER_WEBSITE3 = environ.get("SHORTENER_WEBSITE3", "linkpays.in") # Shortener website for third website
+SHORTENER_API3 = environ.get("SHORTENER_API3", "1e72bd1274625811043cb1d1ca2dbcbe77e9fdd2")  
+SHORTENER_WEBSITE3 = environ.get("SHORTENER_WEBSITE3", "vplink.in") # Shortener website for third website
 
 FREE_FILES_BEFORE_VERIFY = int(environ.get('FREE_FILES_BEFORE_VERIFY', "5"))  # Free files EVERY user gets per day (resets 12 AM IST) before verification starts (0 = disabled)
-FREE_DAILY_LIMIT = int(environ.get('FREE_DAILY_LIMIT', "20"))  # Max files per day (resets 12 AM IST) for NON-premium users (0 = unlimited). Premium users are always unlimited
+FREE_DAILY_LIMIT = int(environ.get('FREE_DAILY_LIMIT', "0"))  # Max files per day (resets 12 AM IST) for NON-premium users (0 = unlimited). Premium users are always unlimited
 SENDALL_PREMIUM_ONLY = is_enabled(environ.get('SENDALL_PREMIUM_ONLY', "True"), True)  # True = 'Send All' button only for Premium users (admins always allowed)
 TWO_VERIFY_GAP = int(environ.get('TWO_VERIFY_GAP', "1200")) # Time gap for two-step verification in seconds (default: 20 minutes)
 THREE_VERIFY_GAP = int(environ.get('THREE_VERIFY_GAP', "54000"))    
