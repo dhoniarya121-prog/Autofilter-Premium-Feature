@@ -67,10 +67,21 @@ async def start(client, message):
             settings = {}
 
         ist_timezone = pytz.timezone('Asia/Kolkata')
-        if await db.user_verified(user_id):
-            key = "third_time_verified"
-        else:
-            key = "second_time_verified" if await db.is_user_verified(user_id) else "last_verified"
+        # Stage is fixed when the link is created, so opening an old/duplicate link
+        # can't push the user into the wrong step. Old links without a stage fall
+        # back to the previous timestamp-based guess.
+        stage = verify_id_info.get("stage")
+        if stage not in (1, 2, 3):
+            if await db.user_verified(user_id):
+                stage = 3
+            else:
+                stage = 2 if await db.is_user_verified(user_id) else 1
+        # Stale-link guard: a higher step only counts if the step before it is still valid today
+        if stage == 3 and not await db.user_verified(user_id):
+            stage = 2
+        if stage == 2 and not await db.is_user_verified(user_id):
+            stage = 1
+        key = {1: "last_verified", 2: "second_time_verified", 3: "third_time_verified"}[stage]
         current_time = datetime.now(tz=ist_timezone)
         await db.update_notcopy_user(user_id, {key: current_time})
         await db.update_verify_id_info(user_id, verify_id, {"verified": True})
@@ -342,7 +353,8 @@ async def start(client, message):
                         logger.warning(f"Free-file notice failed: {e}")
             if verify_needed and not free_granted:
                 verify_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
-                await db.create_verify_id(user_id, verify_id, grp_id)
+                stage = 3 if is_third_shortener else (2 if is_second_shortener else 1)
+                await db.create_verify_id(user_id, verify_id, grp_id, stage)
                 temp.VERIFICATIONS[user_id] = grp_id
                 if message.command[1].startswith('allfiles'):
                     verify = await get_shortlink(f"https://telegram.me/{temp.U_NAME}?start=sendall_{user_id}_{verify_id}_{file_id}", grp_id, is_second_shortener, is_third_shortener)
