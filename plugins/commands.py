@@ -54,8 +54,6 @@ async def start(client, message):
     if len(m.command) == 2 and m.command[1].startswith(('notcopy', 'sendall')):
         _, userid, verify_id, file_id = m.command[1].split("_", 3)
         user_id = int(userid)
-        if message.from_user.id != user_id:
-            return await message.reply("<b>❌ ᴛʜɪs ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ʟɪɴᴋ ɪs ɴᴏᴛ ꜰᴏʀ ʏᴏᴜ. ᴘʟᴇᴀsᴇ ʀᴇǫᴜᴇsᴛ ᴛʜᴇ ꜰɪʟᴇ ʏᴏᴜʀsᴇʟꜰ.</b>", parse_mode=enums.ParseMode.HTML)
         verify_id_info = await db.get_verify_id_info(user_id, verify_id)
         if not verify_id_info or verify_id_info["verified"]:
             return await message.reply("<b>⏳ ʟɪɴᴋ ᴇxᴘɪʀᴇᴅ — ᴘʟᴇᴀsᴇ ʀᴇǫᴜᴇsᴛ ᴛʜᴇ ꜰɪʟᴇ ᴀɢᴀɪɴ.</b>", parse_mode=enums.ParseMode.HTML)
@@ -67,21 +65,10 @@ async def start(client, message):
             settings = {}
 
         ist_timezone = pytz.timezone('Asia/Kolkata')
-        # Stage is fixed when the link is created, so opening an old/duplicate link
-        # can't push the user into the wrong step. Old links without a stage fall
-        # back to the previous timestamp-based guess.
-        stage = verify_id_info.get("stage")
-        if stage not in (1, 2, 3):
-            if await db.user_verified(user_id):
-                stage = 3
-            else:
-                stage = 2 if await db.is_user_verified(user_id) else 1
-        # Stale-link guard: a higher step only counts if the step before it is still valid today
-        if stage == 3 and not await db.user_verified(user_id):
-            stage = 2
-        if stage == 2 and not await db.is_user_verified(user_id):
-            stage = 1
-        key = {1: "last_verified", 2: "second_time_verified", 3: "third_time_verified"}[stage]
+        if await db.user_verified(user_id):
+            key = "third_time_verified"
+        else:
+            key = "second_time_verified" if await db.is_user_verified(user_id) else "last_verified"
         current_time = datetime.now(tz=ist_timezone)
         await db.update_notcopy_user(user_id, {key: current_time})
         await db.update_verify_id_info(user_id, verify_id, {"verified": True})
@@ -353,8 +340,7 @@ async def start(client, message):
                         logger.warning(f"Free-file notice failed: {e}")
             if verify_needed and not free_granted:
                 verify_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
-                stage = 3 if is_third_shortener else (2 if is_second_shortener else 1)
-                await db.create_verify_id(user_id, verify_id, grp_id, stage)
+                await db.create_verify_id(user_id, verify_id, grp_id)
                 temp.VERIFICATIONS[user_id] = grp_id
                 if message.command[1].startswith('allfiles'):
                     verify = await get_shortlink(f"https://telegram.me/{temp.U_NAME}?start=sendall_{user_id}_{verify_id}_{file_id}", grp_id, is_second_shortener, is_third_shortener)
@@ -380,18 +366,13 @@ async def start(client, message):
                     reply_markup=reply_markup,
                     parse_mode=enums.ParseMode.HTML
                 )
-                asyncio.create_task(_delete_later(n, 300))
-                asyncio.create_task(_delete_later(m, 300))
+                await asyncio.sleep(300) 
+                await n.delete()
+                await m.delete()
                 return
         except Exception as e:
-            # FAIL CLOSED: never hand out the file if the verification step itself broke
-            logger.error(f"Error In Verification - {e!r}")
-            try:
-                await log_error(client, f"❗️ Verification Error:\n\n{e!r}")
-            except Exception:
-                pass
-            await m.reply_text("<b>⚠️ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ꜱᴇʀᴠɪᴄᴇ ɪꜱ ᴛᴇᴍᴘᴏʀᴀʀɪʟʏ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ. ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ ɪɴ ᴀ ꜰᴇᴡ ᴍɪɴᴜᴛᴇꜱ.</b>", parse_mode=enums.ParseMode.HTML)
-            return
+            print(f"Error In Verification - {e}")
+            pass
 
     # Daily file limit (non-premium only; Premium = unlimited)
     if not is_premium and FREE_DAILY_LIMIT > 0:
