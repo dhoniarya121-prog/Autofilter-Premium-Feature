@@ -303,8 +303,8 @@ class Database:
                 return second_time < pastDate
         return False
    
-    async def create_verify_id(self, user_id: int, hash):
-        res = {"user_id": user_id, "hash":hash, "verified":False}
+    async def create_verify_id(self, user_id: int, hash, grp_id=0):
+        res = {"user_id": user_id, "hash":hash, "verified":False, "grp_id": grp_id}
         return await self.verify_id.insert_one(res)
 
     async def get_verify_id_info(self, user_id: int, hash):
