@@ -36,6 +36,9 @@ PICS = (environ.get('PICS', 'https://graph.org/file/56b5deb73f3b132e2bb73.jpg ht
 NOR_IMG = environ.get("NOR_IMG", "https://graph.org/file/e20b5fdaf217252964202.jpg")
 MELCOW_PHOTO = environ.get("MELCOW_PHOTO", "https://graph.org/file/56b5deb73f3b132e2bb73.jpg")
 SPELL_IMG = environ.get("SPELL_IMG", "https://graph.org/file/13702ae26fb05df52667c.jpg")
+# Background photo used on every bot menu (Start / Help / About / Channels / Group ...).
+# Default is the bundled image; set BG_PIC env var to a URL or file path to change it.
+BG_PIC = environ.get('BG_PIC', 'assets/bot_bg.jpg')
 SUBSCRIPTION = (environ.get('SUBSCRIPTION', 'https://graph.org/file/242b7f1b52743938d81f1.jpg'))
 FSUB_PICS = (environ.get('FSUB_PICS', 'https://graph.org/file/7478ff3eac37f4329c3d8.jpg https://graph.org/file/56b5deb73f3b132e2bb73.jpg')).split()  # Fsub pic
 
@@ -43,7 +46,7 @@ FSUB_PICS = (environ.get('FSUB_PICS', 'https://graph.org/file/7478ff3eac37f4329c
 # Admin, Channels & Users Configuration
 # ============================
 ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in environ.get('ADMINS', '').split()] # Replace with the actual admin ID(s) to add
-CHANNELS = [int(ch) if id_pattern.search(ch) else ch for ch in environ.get('CHANNELS', '-1001553577227').split()]  # Channel id for auto indexing (make sure bot is admin)
+CHANNELS = [int(ch) if id_pattern.search(ch) else ch for ch in environ.get('CHANNELS', '-1004398129971').split()]  # Channel id for auto indexing (make sure bot is admin)
 
 LOG_CHANNEL = int(environ.get('LOG_CHANNEL', '-100'))  # Log channel id (make sure bot is admin)
 BIN_CHANNEL = int(environ.get('BIN_CHANNEL', '-100'))  # Bin channel id (make sure bot is admin)
@@ -102,8 +105,8 @@ LOG_API_CHANNEL = int(environ.get('LOG_API_CHANNEL', '-100')) #If Anyone Set You
 VERIFY_IMG = environ.get("VERIFY_IMG", "https://telegra.ph/file/9ecc5d6e4df5b83424896.jpg")
 
 TUTORIAL = environ.get("TUTORIAL", "https://t.me/roaroicgroup")   # Tutorial link for verification
-TUTORIAL_2 = environ.get("TUTORIAL_2", "https://t.me/roaroic0")   # Second tutorial link for verification
-TUTORIAL_3 = environ.get("TUTORIAL_3", "https://t.me/roaroic1")   # Third tutorial link for verification
+TUTORIAL_2 = environ.get("TUTORIAL_2", "https://t.me/kingo_serial")   # Second tutorial link for verification
+TUTORIAL_3 = environ.get("TUTORIAL_3", "https://t.me/kingo_serial")   # Third tutorial link for verification
 
 # Verification (Must Fill All Veriables. Else You Got Error
 SHORTENER_API = environ.get("SHORTENER_API", "67088d44ce41560a1129a9ed28bf7793bc15fbed") # Shortener API key
@@ -126,7 +129,7 @@ THREE_VERIFY_GAP = int(environ.get('THREE_VERIFY_GAP', "54000"))
 # ============================
 GRP_LNK = environ.get('GRP_LNK', 'https://t.me/roaroicgroup') # Group link for the bot
 OWNER_LNK = environ.get('OWNER_LNK', 'https://t.me/roaroic0') # Owner link for the bot
-UPDATE_CHNL_LNK = environ.get('UPDATE_CHNL_LNK', 'https://t.me/roaroic1') # Update channel link for the bot
+UPDATE_CHNL_LNK = environ.get('UPDATE_CHNL_LNK', 'https://t.me/kingo_serial') # Update channel link for the bot
 
 # ============================
 # User Configuration
@@ -247,7 +250,7 @@ else:
 # ============================
 # Reactions Configuration
 # ============================
-REACTIONS = ["🤝", "😇", "🤗", "😍", "👍", "🎅", "😐", "🥰", "🤩", "😱", "🤣", "😘", "👏", "😛", "😈", "🎉", "⚡️", "🫡", "🤓", "😎", "🏆", "🔥", "🤭", "🌚", "🆒", "👻", "😁", "🤯", "🙏", "👌", "🕊", "🤡", "🥴", "🐳", "💯", "🍓", "🍾", "💋", "😭", "👀", "🎃", "🙈", "🎄", "💅", "🗿", "🦄", "👾"]
+REACTIONS = ["🤝", "😇", "🤗", "😍", "👍", "🎅", "😐", "🥰", "🤩", "😱", "🤣", "😘", "👏", "😛", "😈", "🎉", "⚡️", "🫡", "🤓", "😎", "🏆", "🔥", "🤭", "🌚", "🆒", "👻", "😁","🤯", "🙏", "👌", "🕊", "🤡", "🥴", "🐳", "💯", "🍓", "🍾","💋", "😭", "👀", "🎃", "🙈", "🎄", "💅", "🗿", "🦄", "👾"]
 
 # ============================
 # Commands Bot
