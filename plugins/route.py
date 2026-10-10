@@ -18,6 +18,12 @@ from info import *
 
 routes = web.RouteTableDef()
 
+
+@routes.get("/health", allow_head=True)
+async def health_route_handler(request):
+    """Lightweight health endpoint for Render and uptime monitors."""
+    return web.json_response({"status": "ok", "service": "autofilter-premium-feature"})
+
 @routes.get("/favicon.ico")
 async def favicon_route_handler(request):
     return web.FileResponse('dreamxbotz/template/favicon.ico')
@@ -27,7 +33,7 @@ async def root_route_handler(request):
     return web.json_response("dreamxbotz")
 
 @routes.get(r"/watch/{path:\S+}", allow_head=True)
-async def stream_handler(request: web.Request):
+async def watch_handler(request: web.Request):
     try:
         path = request.match_info["path"]
         match = re.search(r"^([a-zA-Z0-9_-]{6})(\d+)$", path)
@@ -148,6 +154,11 @@ async def media_streamer(request: web.Request, id: int, secure_hash: str):
         else:
             mime_type = "application/octet-stream"
             file_name = f"{secrets.token_hex(2)}.unknown"
+
+    # play video/audio inline so the browser <video> player can stream/seek;
+    # everything else downloads
+    if mime_type.split("/")[0] in ("video", "audio"):
+        disposition = "inline"
 
     headers = {
         "Content-Type": f"{mime_type}",
