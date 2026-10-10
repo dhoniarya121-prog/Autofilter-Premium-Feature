@@ -1479,7 +1479,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 ],[
                     InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
                      InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
+                ],[
+                    InlineKeyboardButton('📨 ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ 💌', callback_data='ct:start')
                 ]]
+        if query.from_user.id in ADMINS:
+            buttons.append([InlineKeyboardButton('👑 ᴀᴅᴍɪɴ ᴘᴀɴᴇʟ 👑', callback_data='ap:home')])
         reply_markup = InlineKeyboardMarkup(buttons)
         current_time = datetime.now(pytz.timezone(TIMEZONE))
         curr_time = current_time.hour
@@ -1530,6 +1534,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
     elif query.data == "help":
         buttons = [[
+            InlineKeyboardButton('💬 ᴄʜᴀᴛ ᴡɪᴛʜ ᴀᴅᴍɪɴ', callback_data='ct:start')
+        ],[
             InlineKeyboardButton('⇋ ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ ⇋', callback_data='start')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -1545,6 +1551,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             InlineKeyboardButton ('🪔 sᴏᴜʀᴄᴇ', callback_data='source'),
         ],[
             InlineKeyboardButton('ᴅᴏɴᴀᴛɪᴏɴ 💰', callback_data='donation'),
+            InlineKeyboardButton('💬 ᴄʜᴀᴛ ᴡɪᴛʜ ᴀᴅᴍɪɴ', callback_data='ct:start'),
         ],[
             InlineKeyboardButton('⇋ ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ ⇋', callback_data='start')
         ]]
