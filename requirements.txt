@@ -7,16 +7,13 @@ umongo
 requests
 bs4
 shortzy
-datetime
 pytz
 aiohttp
 
 
 
 # Other tools
-opencv-python-headless==4.8.1.78
 python-dotenv==0.21.1
-PyLeaves==1.0.2
 humanize
 Pillow
 psutil
@@ -31,7 +28,6 @@ ffmpeg-python==0.2.0
 jinja2
 apscheduler
 pyshorteners
-pyromod
 colorama
 fuzzywuzzy
 Levenshtein==0.24.0
