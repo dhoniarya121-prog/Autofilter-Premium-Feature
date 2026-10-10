@@ -92,12 +92,12 @@ def bar(pct: float, size: int = 10) -> str:
     """Coloured progress bar: green < 60 %, yellow < 85 %, red above."""
     pct = max(0.0, min(100.0, float(pct)))
     filled = round(pct / 100 * size)
-    colour = "🟩" if pct < 60 else ("🟨" if pct < 85 else "🟥")
-    return colour * filled + "⬜" * (size - filled)
+    colour = "■" if pct < 60 else ("■" if pct < 85 else "■")
+    return colour * filled + "□" * (size - filled)
 
 
 def on_off(v) -> str:
-    return "🟢 ᴏɴ" if v else "🔴 ᴏꜰꜰ"
+    return "● ᴏɴ" if v else "■ ᴏꜰꜰ"
 
 
 async def get_flag(key, default):
@@ -237,10 +237,10 @@ async def home_text():
         "<b>╔══════════════════╗\n"
         "   👑  ᴀᴅᴍɪɴ ᴘᴀɴᴇʟ  👑\n"
         "╚══════════════════╝</b>\n\n"
-        f"🟢 <b>ᴜꜱᴇʀꜱ</b> : <code>{users}</code>\n"
-        f"🟣 <b>ᴘʀᴇᴍɪᴜᴍ</b> : <code>{prem}</code>\n"
-        f"🟠 <b>ᴏᴘᴇɴ ᴛɪᴄᴋᴇᴛꜱ</b> : <code>{open_t}</code>\n"
-        f"🔵 <b>ᴜᴘᴛɪᴍᴇ</b> : <code>{get_readable_time(time.time() - START_TIME)}</code>\n\n"
+        f"● <b>ᴜꜱᴇʀꜱ</b> : <code>{users}</code>\n"
+        f"✦ <b>ᴘʀᴇᴍɪᴜᴍ</b> : <code>{prem}</code>\n"
+        f"✧ <b>ᴏᴘᴇɴ ᴛɪᴄᴋᴇᴛꜱ</b> : <code>{open_t}</code>\n"
+        f"◆ <b>ᴜᴘᴛɪᴍᴇ</b> : <code>{get_readable_time(time.time() - START_TIME)}</code>\n\n"
         "<i>👇 ᴄʜᴏᴏꜱᴇ ᴀ ꜱᴇᴄᴛɪᴏɴ</i>"
     )
 
@@ -249,9 +249,9 @@ async def home_kb():
     open_t = await safe_count(TICKETS.count_documents({"status": "open"}))
     badge = f" ({open_t})" if open_t else ""
     return KB([
-        [B("🟢 ᴅᴀꜱʜʙᴏᴀʀᴅ", callback_data="ap:dash"), B("🔵 ᴜꜱᴇʀꜱ", callback_data="ap:users")],
-        [B("🟣 ᴘʀᴇᴍɪᴜᴍ", callback_data="ap:prem"), B("🟠 ʙʀᴏᴀᴅᴄᴀꜱᴛ", callback_data="ap:bc")],
-        [B("🔴 ʙᴀɴꜱ", callback_data="ap:bans"), B("🟡 ꜱᴇᴛᴛɪɴɢꜱ", callback_data="ap:set")],
+        [B("● ᴅᴀꜱʜʙᴏᴀʀᴅ", callback_data="ap:dash"), B("◆ ᴜꜱᴇʀꜱ", callback_data="ap:users")],
+        [B("✦ ᴘʀᴇᴍɪᴜᴍ", callback_data="ap:prem"), B("✧ ʙʀᴏᴀᴅᴄᴀꜱᴛ", callback_data="ap:bc")],
+        [B("■ ʙᴀɴꜱ", callback_data="ap:bans"), B("◇ ꜱᴇᴛᴛɪɴɢꜱ", callback_data="ap:set")],
         [B(f"📨 ɪɴʙᴏx{badge}", callback_data="ap:inbox"), B("🖥 ꜱʏꜱᴛᴇᴍ", callback_data="ap:sys")],
         [B("📜 ᴄᴏᴍᴍᴀɴᴅꜱ", callback_data="ap:cmds"), B("❌ ᴄʟᴏꜱᴇ", callback_data="ap:close")],
     ])
@@ -269,7 +269,7 @@ async def dash_text():
     closed_t = await safe_count(TICKETS.count_documents({"status": "closed"}))
     cpu, ram = psutil.cpu_percent(), psutil.virtual_memory().percent
     return (
-        "<b>🟢 ᴅᴀꜱʜʙᴏᴀʀᴅ</b>\n━━━━━━━━━━━━━━━━━━\n"
+        "<b>● ᴅᴀꜱʜʙᴏᴀʀᴅ</b>\n━━━━━━━━━━━━━━━━━━\n"
         f"👥 ᴜꜱᴇʀꜱ : <code>{users}</code>\n"
         f"💬 ᴄʜᴀᴛꜱ : <code>{chats}</code>\n"
         f"💎 ᴘʀᴇᴍɪᴜᴍ : <code>{prem}</code>\n"
@@ -299,15 +299,15 @@ def sys_text():
 
 CMDS_TEXT = (
     "<b>📜 ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅꜱ</b>\n━━━━━━━━━━━━━━━━━━\n"
-    "🟢 /panel – ᴏᴘᴇɴ ᴛʜɪꜱ ᴘᴀɴᴇʟ\n"
-    "🔵 /userinfo <code>id</code> – ᴜꜱᴇʀ ᴄᴀʀᴅ ᴡɪᴛʜ ᴀᴄᴛɪᴏɴꜱ\n"
+    "● /panel – ᴏᴘᴇɴ ᴛʜɪꜱ ᴘᴀɴᴇʟ\n"
+    "◆ /userinfo <code>id</code> – ᴜꜱᴇʀ ᴄᴀʀᴅ ᴡɪᴛʜ ᴀᴄᴛɪᴏɴꜱ\n"
     "📨 /tickets – ᴏᴘᴇɴ ꜱᴜᴘᴘᴏʀᴛ ᴛɪᴄᴋᴇᴛꜱ\n"
-    "🟡 /maintenance <code>on|off</code>\n"
+    "◇ /maintenance <code>on|off</code>\n"
     "💬 /chat <code>id</code> – ʟɪᴠᴇ ᴄʜᴀᴛ ᴡɪᴛʜ ᴀ ᴜꜱᴇʀ\n"
     "✉️ /msg <code>id text</code> | /msg all\n"
-    "🟠 /broadcast (ʀᴇᴘʟʏ) – ʙʀᴏᴀᴅᴄᴀꜱᴛ\n"
-    "🟣 /add_premium · /remove_premium · /premium_users\n"
-    "🔴 /ban · /unban · /users · /chats\n"
+    "✧ /broadcast (ʀᴇᴘʟʏ) – ʙʀᴏᴀᴅᴄᴀꜱᴛ\n"
+    "✦ /add_premium · /remove_premium · /premium_users\n"
+    "■ /ban · /unban · /users · /chats\n"
     "📊 /stats · /logs · /restart\n\n"
     "<b>👤 ᴜꜱᴇʀ ᴄᴏᴍᴍᴀɴᴅ</b>\n📨 /contact – ᴛᴀʟᴋ ᴛᴏ ᴀᴅᴍɪɴ"
 )
@@ -317,7 +317,7 @@ async def users_page():
     total = await safe_count(db.total_users_count())
     prem = await safe_count(db.all_premium_users())
     text = (
-        "<b>🔵 ᴜꜱᴇʀꜱ</b>\n━━━━━━━━━━━━━━━━━━\n"
+        "<b>◆ ᴜꜱᴇʀꜱ</b>\n━━━━━━━━━━━━━━━━━━\n"
         f"👥 ᴛᴏᴛᴀʟ : <code>{total}</code>\n"
         f"💎 ᴘʀᴇᴍɪᴜᴍ : <code>{prem}</code>\n"
         f"🚫 ʙᴀɴɴᴇᴅ : <code>{len(temp.BANNED_USERS)}</code>\n\n"
@@ -342,7 +342,7 @@ async def prem_page():
     total = await safe_count(db.all_premium_users())
     body = "\n".join(rows) if rows else "<i>ɴᴏ ᴀᴄᴛɪᴠᴇ ᴘʀᴇᴍɪᴜᴍ ᴜꜱᴇʀꜱ</i>"
     text = (
-        f"<b>🟣 ᴘʀᴇᴍɪᴜᴍ</b>  •  <code>{total}</code> ᴀᴄᴛɪᴠᴇ\n━━━━━━━━━━━━━━━━━━\n"
+        f"<b>✦ ᴘʀᴇᴍɪᴜᴍ</b>  •  <code>{total}</code> ᴀᴄᴛɪᴠᴇ\n━━━━━━━━━━━━━━━━━━\n"
         f"<b>ꜱᴏᴏɴᴇꜱᴛ ᴇxᴘɪʀɪɴɢ :</b>\n{body}\n\n"
         "➕ <code>/add_premium id 1 month</code>\n"
         "➖ <code>/remove_premium id</code>\n"
@@ -367,7 +367,7 @@ async def bans_page():
     rows.append(BACK)
     body = "\n".join(lines) if lines else "<i>ɴᴏ ʙᴀɴɴᴇᴅ ᴜꜱᴇʀꜱ 🎉</i>"
     more = f"\n\n<i>ꜱʜᴏᴡɪɴɢ 10 ᴏꜰ {len(temp.BANNED_USERS)}</i>" if len(temp.BANNED_USERS) > 10 else ""
-    return f"<b>🔴 ʙᴀɴɴᴇᴅ ᴜꜱᴇʀꜱ</b>\n━━━━━━━━━━━━━━━━━━\n{body}{more}", KB(rows)
+    return f"<b>■ ʙᴀɴɴᴇᴅ ᴜꜱᴇʀꜱ</b>\n━━━━━━━━━━━━━━━━━━\n{body}{more}", KB(rows)
 
 
 async def settings_page():
@@ -376,7 +376,7 @@ async def settings_page():
     mt = await get_flag("MAINTENANCE", False)
     sp = await get_flag("SUPPORT_INBOX", True)
     text = (
-        "<b>🟡 ꜱᴇᴛᴛɪɴɢꜱ</b>\n━━━━━━━━━━━━━━━━━━\n"
+        "<b>◇ ꜱᴇᴛᴛɪɴɢꜱ</b>\n━━━━━━━━━━━━━━━━━━\n"
         f"🔍 ᴘᴍ ꜱᴇᴀʀᴄʜ : {on_off(pm)}\n"
         f"🎞 ᴍᴏᴠɪᴇ ᴜᴘᴅᴀᴛᴇ ɴᴏᴛɪꜰʏ : {on_off(mv)}\n"
         f"🛠 ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ ᴍᴏᴅᴇ : {on_off(mt)}\n"
@@ -411,7 +411,7 @@ async def inbox_page():
 async def broadcast_page():
     users = await safe_count(db.total_users_count())
     text = (
-        "<b>🟠 ʙʀᴏᴀᴅᴄᴀꜱᴛ</b>\n━━━━━━━━━━━━━━━━━━\n"
+        "<b>✧ ʙʀᴏᴀᴅᴄᴀꜱᴛ</b>\n━━━━━━━━━━━━━━━━━━\n"
         f"👥 ʀᴇᴄɪᴘɪᴇɴᴛꜱ : <code>{users}</code>\n\n"
         "1️⃣ ᴛᴀᴘ <b>✍️ ᴄᴏᴍᴘᴏꜱᴇ</b>\n"
         "2️⃣ ꜱᴇɴᴅ ᴛʜᴇ ᴍᴇꜱꜱᴀɢᴇ (ᴛᴇxᴛ / ᴘʜᴏᴛᴏ / ᴠɪᴅᴇᴏ / ꜰɪʟᴇ)\n"
@@ -445,8 +445,8 @@ async def user_card(bot, uid):
         f"🏷 ɴᴀᴍᴇ : <a href='tg://user?id={uid}'>{name}</a>\n"
         f"🔗 ᴜꜱᴇʀɴᴀᴍᴇ : {esc(uname)}\n"
         f"🆔 ɪᴅ : <code>{uid}</code>\n"
-        f"💎 ᴘʀᴇᴍɪᴜᴍ : {'🟣 ʏᴇꜱ (till ' + exp_s + ')' if premium else '⚪ ɴᴏ'}\n"
-        f"🚫 ʙᴀɴɴᴇᴅ : {'🔴 ʏᴇꜱ – ' + esc(ban.get('ban_reason')) if banned else '🟢 ɴᴏ'}\n"
+        f"💎 ᴘʀᴇᴍɪᴜᴍ : {'✦ ʏᴇꜱ (till ' + exp_s + ')' if premium else '⚪ ɴᴏ'}\n"
+        f"🚫 ʙᴀɴɴᴇᴅ : {'■ ʏᴇꜱ – ' + esc(ban.get('ban_reason')) if banned else '● ɴᴏ'}\n"
         f"🎬 ꜰɪʟᴇꜱ ᴛᴏᴅᴀʏ : <code>{daily.get('sent', 0)}</code>\n"
         f"📨 ᴛɪᴄᴋᴇᴛꜱ : <code>{tix}</code>"
     )
@@ -665,7 +665,7 @@ async def admin_callbacks(bot, query):
                         f"{('@' + esc(t['uname'])) if t.get('uname') else ''}\n"
                         f"🆔 <code>{t['uid']}</code>\n"
                         f"💬 ᴍᴇꜱꜱᴀɢᴇꜱ : <code>{t.get('count', 0)}</code>\n"
-                        f"📌 ꜱᴛᴀᴛᴜꜱ : {'🟢 ᴏᴘᴇɴ' if t['status'] == 'open' else '⚫ ᴄʟᴏꜱᴇᴅ'}")
+                        f"📌 ꜱᴛᴀᴛᴜꜱ : {'● ᴏᴘᴇɴ' if t['status'] == 'open' else '⚫ ᴄʟᴏꜱᴇᴅ'}")
                 kb = ticket_kb(tid, t["uid"], t["status"] != "open")
                 kb.inline_keyboard.append([B("⬅️ ɪɴʙᴏx", callback_data="ap:inbox")])
                 await show(query, text, kb)
