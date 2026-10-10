@@ -147,7 +147,11 @@ async def start(client, message):
                 ],[
                     InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
                      InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
-                ]] 
+                ],[
+                    InlineKeyboardButton('📨 ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ 💌', callback_data='ct:start')
+                ]]
+        if message.from_user.id in ADMINS:
+            buttons.append([InlineKeyboardButton('👑 ᴀᴅᴍɪɴ ᴘᴀɴᴇʟ 👑', callback_data='ap:home')])
         reply_markup = InlineKeyboardMarkup(buttons)
         current_time = datetime.now(pytz.timezone(TIMEZONE))
         curr_time = current_time.hour        
@@ -180,8 +184,11 @@ async def start(client, message):
                 ],[
                     InlineKeyboardButton('ᴛʀᴇɴᴅɪɴɢ 👑', callback_data="topsearch"),
                      InlineKeyboardButton('Pʀᴇᴍɪᴜᴍ 🎟', callback_data="premium_info"),
+                ],[
+                    InlineKeyboardButton('📨 ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ 💌', callback_data='ct:start')
                 ]]
-                    
+        if message.from_user.id in ADMINS:
+            buttons.append([InlineKeyboardButton('👑 ᴀᴅᴍɪɴ ᴘᴀɴᴇʟ 👑', callback_data='ap:home')])
         reply_markup = InlineKeyboardMarkup(buttons)
         current_time = datetime.now(pytz.timezone(TIMEZONE))
         curr_time = current_time.hour        
