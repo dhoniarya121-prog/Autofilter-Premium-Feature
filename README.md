@@ -80,6 +80,21 @@ premium_users       – List premium users
 restart             – Restart the bot
 ```
 
+
+## 🛠️ Reliability updates
+
+- `/health` provides a lightweight health-check endpoint for Render.
+- Render's health check now targets `/health`.
+- Render supplies its own `PORT`; do not hard-code a port in the Render environment.
+- Optional environment settings are documented in `render.yaml` for cache time, search mode, auto-delete, streaming, and secondary database support.
+
+### Important deployment notes
+
+1. Set all required environment variables in Render before deploying.
+2. Keep `MULTIPLE_DB=False` unless you have configured a valid `DATABASE_URI2`.
+3. Keep API keys and bot tokens in environment variables; do not commit real secrets to a public repository.
+4. A successful `/health` response confirms that the web server is responding; it does not by itself verify Telegram or MongoDB connectivity.
+
 ---
 
 <p align="center"><b>Jai Shree Krishna 🙏😉</b></p>
