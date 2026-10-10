@@ -1602,7 +1602,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
     elif query.data == "source":
         buttons = [[
-            InlineKeyboardButton('ADMIN📜', url='https://t.me/roaroic0'),
+            InlineKeyboardButton('ADMIN📜', callback_data='ct:start'),
             InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -1615,7 +1615,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "ɢʀᴏᴜᴘ":
         buttons = [[
             InlineKeyboardButton('SEARCH GROUP 🏢', url='https://t.me/roaroicgroup'),
-            InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='about')
+            InlineKeyboardButton('DISCUSSION GROUP 🏢', url='https://t.me/+HwZPzMx1njs2N2Y9') 
+        ],[
+            InlineKeyboardButton('⇋ ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ ⇋', callback_data='start')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await query.message.edit_text(
@@ -1694,7 +1696,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif query.data == "upi_info":
         try:
             btn = [[
-                InlineKeyboardButton('• ꜱᴇɴᴅ  ᴘᴀʏᴍᴇɴᴛ ꜱᴄʀᴇᴇɴꜱʜᴏᴛ •', url=OWNER_LNK),
+                InlineKeyboardButton('• ꜱᴇɴᴅ  ᴘᴀʏᴍᴇɴᴛ ꜱᴄʀᴇᴇɴꜱʜᴏᴛ •', callback_data='ct:start'),
             ],[
                 InlineKeyboardButton('⇋ ʙᴀᴄᴋ ⇋', callback_data='buy_info')
             ]]
