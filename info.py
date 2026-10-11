@@ -242,10 +242,13 @@ if 'DYNO' in environ:
 else:
     ON_HEROKU = False
 HAS_SSL = is_enabled(str(getenv('HAS_SSL', True)), True)
-if HAS_SSL:
-    URL = "https://{}/".format(FQDN)
+_scheme = "https" if HAS_SSL else "http"
+if ON_HEROKU or NO_PORT or PORT in (80, 443):
+    URL = "{}://{}/".format(_scheme, FQDN)
 else:
-    URL = "http://{}/".format(FQDN)
+    # self-hosted / VPS: the port must be part of the public link, otherwise
+    # every stream/download link points at the wrong port and fails
+    URL = "{}://{}:{}/".format(_scheme, FQDN, PORT)
 
 # ============================
 # Reactions Configuration
