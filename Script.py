@@ -211,8 +211,7 @@ Nᴀᴍᴇ : {}
 Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
     
     CAPTION = """<b><a href="https://t.me/roaroic0">{file_name}</a></b>
-    <blockquote> <b>🎧 ᴜsᴇ ᴠʟᴄ ᴘʟᴀʏᴇʀ ꜰᴏʀ ᴀᴜᴅɪᴏ ɪssᴜᴇs</b>\n
-<b>ᴘʟᴢ ғᴏʀᴡᴀʀᴅ ᴛʜɪꜱ ғɪʟᴇ ᴛᴏ ᴛʜᴇ ꜱᴀᴠᴇᴅ ᴍᴇꜱꜱᴀɢᴇ ᴀɴᴅ ᴄʟᴏꜱᴇ.</b></blockquote>\n\n<b>✨ Powered By : <a href="https://t.me/roaroic0">[ ROAROIC ]</a></b>"""
+    <blockquote> <b>🎧 ᴜsᴇ ᴠʟᴄ ᴘʟᴀʏᴇʀ ꜰᴏʀ ᴀᴜᴅɪᴏ ɪssᴜᴇs</b>\n<b>ᴘʟᴢ ғᴏʀᴡᴀʀᴅ ᴛʜɪꜱ ғɪʟᴇ ᴛᴏ ᴛʜᴇ ꜱᴀᴠᴇᴅ ᴍᴇꜱꜱᴀɢᴇ ᴀɴᴅ ᴄʟᴏꜱᴇ.</b></blockquote>\n<b>✨ Powered By : <a href="https://t.me/roaroic0">[ ROAROIC ]</a></b>"""
 
     
     MOVIE_UPDATE_NOTIFY_TXT = """
@@ -442,8 +441,6 @@ This Is An Open-Source Project. You Can Use It Freely, But Selling The Source Co
 ✅ <b>ʏᴏᴜʀ 1ꜱᴛ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ɪs sᴜᴄᴄᴇssꜰᴜʟ.</b>
 🔓 <i>ʏᴏᴜ ʜᴀᴠᴇ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss ᴜɴᴛɪʟ ᴛʜᴇ ɴᴇxᴛ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ.</i>
 
-🎬 <b>Re-Search you movie name right now...</b>
-
 <code>#ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ 1/3 ✓</code>"""
 
     SECOND_VERIFICATION_TEXT = """<b><i>👋 ʜᴇʏ {},
@@ -461,8 +458,6 @@ This Is An Open-Source Project. You Can Use It Freely, But Selling The Source Co
 ✅ <b>ʏᴏᴜʀ 2ɴᴅ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ɪs sᴜᴄᴄᴇssꜰᴜʟ.</b>
 🔓 <i>ʏᴏᴜ ʜᴀᴠᴇ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss ᴜɴᴛɪʟ ᴛʜᴇ ɴᴇxᴛ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ.</i>
 
-🎬 <b>Re-Search you movie name right now...</b>
-
 <code>#ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ 2/3 ✓</code>"""
 
     THIRDT_VERIFICATION_TEXT = """<b><i>👋 ʜᴇʏ {},
@@ -479,8 +474,6 @@ This Is An Open-Source Project. You Can Use It Freely, But Selling The Source Co
 
 ✅ <b>ʏᴏᴜʀ 3ʀᴅ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ɪs sᴜᴄᴄᴇssꜰᴜʟ.</b>
 🔓 <i>ʏᴏᴜ ʜᴀᴠᴇ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss ꜰᴏʀ ᴛʜᴇ ɴᴇxᴛ ꜰᴜʟʟ ᴅᴀʏ.</i>
-
-🎬 <b>Re-Search you movie name right now...</b>
 
 <code>#ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ 3/3 ✓</code>"""
 
