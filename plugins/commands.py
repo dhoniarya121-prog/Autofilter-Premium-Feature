@@ -37,6 +37,7 @@ async def start(client, message):
         except Exception:
             await message.react(emoji="⚡️", big=True)
     m = message
+    just_verified = False
     # Send All is premium-protected (also blocks hand-made deep links)
     if (SENDALL_PREMIUM_ONLY and len(m.command) == 2
             and m.command[1].startswith(('allfiles', 'sendall'))
@@ -52,74 +53,93 @@ async def start(client, message):
         asyncio.create_task(_delete_later(lock, 120))
         return
     if len(m.command) == 2 and m.command[1].startswith(('notcopy', 'sendall')):
-        _, userid, verify_id, file_id = m.command[1].split("_", 3)
-        user_id = int(userid)
+        try:
+            _, userid, verify_id, file_id = m.command[1].split("_", 3)
+            user_id = int(userid)
+        except ValueError:
+            return await message.reply("<b>⏳ ɪɴᴠᴀʟɪᴅ ʟɪɴᴋ — ᴘʟᴇᴀsᴇ ʀᴇǫᴜᴇsᴛ ᴛʜᴇ ꜰɪʟᴇ ᴀɢᴀɪɴ.</b>", parse_mode=enums.ParseMode.HTML)
+        # a verification link only works for the user it was generated for
+        if user_id != m.from_user.id:
+            return await message.reply("<b>🚫 ᴛʜɪs ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ʟɪɴᴋ ʙᴇʟᴏɴɢs ᴛᴏ ᴀɴᴏᴛʜᴇʀ ᴜsᴇʀ. ʀᴇǫᴜᴇsᴛ ᴛʜᴇ ꜰɪʟᴇ ʏᴏᴜʀsᴇʟꜰ.</b>", parse_mode=enums.ParseMode.HTML)
         verify_id_info = await db.get_verify_id_info(user_id, verify_id)
-        if not verify_id_info or verify_id_info["verified"]:
+        if not verify_id_info:
             return await message.reply("<b>⏳ ʟɪɴᴋ ᴇxᴘɪʀᴇᴅ — ᴘʟᴇᴀsᴇ ʀᴇǫᴜᴇsᴛ ᴛʜᴇ ꜰɪʟᴇ ᴀɢᴀɪɴ.</b>", parse_mode=enums.ParseMode.HTML)
-        # group id is stored with the verify id (survives bot restarts); fall back to memory
-        grp_id = verify_id_info.get("grp_id") or temp.VERIFICATIONS.get(user_id, 0)
-        try:
-            settings = await get_settings(grp_id)
-        except Exception:
-            settings = {}
+        if verify_id_info["verified"]:
+            # link already used (double tap / shortener opened it twice): don't
+            # re-verify, just hand over the file that was requested before verification
+            grp_id = verify_id_info.get("grp_id") or temp.VERIFICATIONS.get(user_id, 0)
+            deep = "allfiles" if message.command[1].startswith('sendall') else "file"
+            message.command = ["start", f"{deep}_{grp_id}_{file_id}"]
+            just_verified = True
+        else:
+            just_verified = False
+        if not just_verified:
+            # group id is stored with the verify id (survives bot restarts); fall back to memory
+            grp_id = verify_id_info.get("grp_id") or temp.VERIFICATIONS.get(user_id, 0)
+            try:
+                settings = await get_settings(grp_id)
+            except Exception:
+                settings = {}
 
-        ist_timezone = pytz.timezone('Asia/Kolkata')
-        if await db.user_verified(user_id):
-            key = "third_time_verified"
-        else:
-            key = "second_time_verified" if await db.is_user_verified(user_id) else "last_verified"
-        current_time = datetime.now(tz=ist_timezone)
-        await db.update_notcopy_user(user_id, {key: current_time})
-        await db.update_verify_id_info(user_id, verify_id, {"verified": True})
-        if key == "third_time_verified":
-            num, msg = 3, script.THIRDT_VERIFY_COMPLETE_TEXT
-        elif key == "second_time_verified":
-            num, msg = 2, script.SECOND_VERIFY_COMPLETE_TEXT
-        else:
-            num, msg = 1, script.VERIFY_COMPLETE_TEXT
-        if message.command[1].startswith('sendall'):
-            verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=allfiles_{grp_id}_{file_id}"
-        else:
-            verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=file_{grp_id}_{file_id}"
-        btn = [[
-            InlineKeyboardButton("🎬 ɴᴏᴛ ʀᴇᴄᴇɪᴠᴇᴅ? ᴛᴀᴘ ᴛᴏ ɢᴇᴛ ᴍᴏᴠɪᴇ", url=verifiedfiles),
-        ], [
-            InlineKeyboardButton("💎 ɢᴇᴛ ᴘʀᴇᴍɪᴜᴍ (ɴᴏ ᴠᴇʀɪꜰʏ)", callback_data="premium_info"),
-        ]]
-        reply_markup = InlineKeyboardMarkup(btn)
-        caption = msg.format(message.from_user.mention, get_readable_time(TWO_VERIFY_GAP))
-        # 1) show the completion message FIRST (never blocked by log-channel / image errors)
-        try:
-            dlt = await m.reply_photo(
-                photo=VERIFY_IMG,
-                caption=caption,
-                reply_markup=reply_markup,
-                parse_mode=enums.ParseMode.HTML
-            )
-        except Exception as e:
-            logger.warning(f"Verify image failed, sending text instead: {e}")
-            dlt = await m.reply_text(
-                caption,
-                reply_markup=reply_markup,
-                parse_mode=enums.ParseMode.HTML,
-                disable_web_page_preview=True
-            )
-        # 2) log (best effort)
-        try:
-            log_chat = settings.get('log') if settings else None
-            if log_chat:
-                await client.send_message(log_chat, script.VERIFIED_LOG_TEXT.format(
-                    m.from_user.mention, user_id,
-                    datetime.now(ist_timezone).strftime('%d %B %Y'), num))
-        except Exception as e:
-            logger.warning(f"Verification log failed: {e}")
-        # 3) auto-clean the notice without blocking the handler
-        asyncio.create_task(_delete_later(dlt, 300))
+            ist_timezone = pytz.timezone('Asia/Kolkata')
+            if await db.user_verified(user_id):
+                key = "third_time_verified"
+            else:
+                key = "second_time_verified" if await db.is_user_verified(user_id) else "last_verified"
+            current_time = datetime.now(tz=ist_timezone)
+            await db.update_notcopy_user(user_id, {key: current_time})
+            await db.update_verify_id_info(user_id, verify_id, {"verified": True})
+            if key == "third_time_verified":
+                num, msg = 3, script.THIRDT_VERIFY_COMPLETE_TEXT
+            elif key == "second_time_verified":
+                num, msg = 2, script.SECOND_VERIFY_COMPLETE_TEXT
+            else:
+                num, msg = 1, script.VERIFY_COMPLETE_TEXT
+            if message.command[1].startswith('sendall'):
+                verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=allfiles_{grp_id}_{file_id}"
+            else:
+                verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=file_{grp_id}_{file_id}"
+            btn = [[
+                InlineKeyboardButton("🎬 ɴᴏᴛ ʀᴇᴄᴇɪᴠᴇᴅ? ᴛᴀᴘ ᴛᴏ ɢᴇᴛ ᴍᴏᴠɪᴇ", url=verifiedfiles),
+            ], [
+                InlineKeyboardButton("💎 ɢᴇᴛ ᴘʀᴇᴍɪᴜᴍ (ɴᴏ ᴠᴇʀɪꜰʏ)", callback_data="premium_info"),
+            ]]
+            reply_markup = InlineKeyboardMarkup(btn)
+            caption = msg.format(message.from_user.mention, get_readable_time(TWO_VERIFY_GAP))
+            # 1) show the completion message FIRST (never blocked by log-channel / image errors)
+            try:
+                dlt = await m.reply_photo(
+                    photo=VERIFY_IMG,
+                    caption=caption,
+                    reply_markup=reply_markup,
+                    parse_mode=enums.ParseMode.HTML
+                )
+            except Exception as e:
+                logger.warning(f"Verify image failed, sending text instead: {e}")
+                dlt = await m.reply_text(
+                    caption,
+                    reply_markup=reply_markup,
+                    parse_mode=enums.ParseMode.HTML,
+                    disable_web_page_preview=True
+                )
+            # 2) log (best effort)
+            try:
+                log_chat = settings.get('log') if settings else None
+                if log_chat:
+                    await client.send_message(log_chat, script.VERIFIED_LOG_TEXT.format(
+                        m.from_user.mention, user_id,
+                        datetime.now(ist_timezone).strftime('%d %B %Y'), num))
+            except Exception as e:
+                logger.warning(f"Verification log failed: {e}")
+            # 3) auto-clean the notice without blocking the handler
+            asyncio.create_task(_delete_later(dlt, 300))
         # 4) deliver the movie/file straight away (no extra click needed):
         #    continue into the normal file-delivery flow below
-        deep = "allfiles" if message.command[1].startswith('sendall') else "file"
-        message.command = ["start", f"{deep}_{grp_id}_{file_id}"]
+        if not just_verified:
+            grp_id = verify_id_info.get("grp_id") or temp.VERIFICATIONS.get(user_id, 0)
+            deep = "allfiles" if message.command[1].startswith('sendall') else "file"
+            message.command = ["start", f"{deep}_{grp_id}_{file_id}"]
+        just_verified = True  # file was requested before verification -> deliver it now
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         buttons = [[
                     InlineKeyboardButton('❤️ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❤️', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
@@ -324,7 +344,9 @@ async def start(client, message):
 
 
     user_id = m.from_user.id
-    if not is_premium:
+    # just_verified: user came back from the shortlink -> deliver the requested file,
+    # never ask for verification again for this very request
+    if not is_premium and not just_verified:
         try:
             grp_id = int(grp_id)
             user_verified = await db.is_user_verified(user_id)
