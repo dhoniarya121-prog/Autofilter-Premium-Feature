@@ -1410,25 +1410,39 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.answer("Yᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ sᴇᴇ ᴛʜɪꜱ ❌", show_alert=True)
 
     elif DreamxData.startswith("generate_stream_link"):
-        _, file_id = DreamxData.split(":")
+        _, file_id = DreamxData.split(":", 1)
         if STREAM_MODE and PREMIUM_STREAM_MODE and query.from_user.id not in ADMINS and not await db.has_premium_access(query.from_user.id):
             return await query.answer("🔒 Stream / Fast Download is for Premium users only. Check /plan", show_alert=True)
+        # Telegram only accepts public http(s) hosts in URL buttons. If FQDN / RENDER_EXTERNAL_HOSTNAME
+        # is not configured, URL becomes https://0.0.0.0/ and every button below gets rejected.
+        if any(h in URL for h in ("0.0.0.0", "127.0.0.1", "localhost", "None")):
+            logger.error(f"Stream URL is invalid ({URL}). Set the FQDN env var to your public domain.")
+            return await query.answer(
+                "⚠️ Stream server URL is not configured.\nAdmin: set FQDN env var to your public domain.",
+                show_alert=True
+            )
+        try:
+            await query.answer(MSG_ALRT)
+        except Exception:
+            pass
         try:
             user_id = query.from_user.id
             username = query.from_user.mention
-            log_msg = await client.send_cached_media(chat_id=BIN_CHANNEL, file_id=file_id,)
-            fileName = {quote_plus(get_name(log_msg))}
-            dreamx_stream = f"{URL}watch/{str(log_msg.id)}/{quote_plus(get_name(log_msg))}?hash={get_hash(log_msg)}"
-            dreamx_download = f"{URL}{str(log_msg.id)}/{quote_plus(get_name(log_msg))}?hash={get_hash(log_msg)}"
-            await query.answer(MSG_ALRT)
-            await asyncio.sleep(1)
-            await log_msg.reply_text(
-                text=f"•• ʟɪɴᴋ ɢᴇɴᴇʀᴀᴛᴇᴅ ꜰᴏʀ ɪᴅ #{user_id} \n•• ᴜꜱᴇʀɴᴀᴍᴇ : {username} \n\n•• ᖴᎥᒪᗴ Nᗩᗰᗴ : {fileName}",
-                quote=True,
-                disable_web_page_preview=True,
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ", url=dreamx_download),  # we download Link
-                                                    InlineKeyboardButton('▶️ ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ', url=dreamx_stream)]])  # web stream Link
+            log_msg = await client.send_cached_media(chat_id=BIN_CHANNEL, file_id=file_id)
+            name = get_name(log_msg)
+            dreamx_stream = f"{URL}watch/{log_msg.id}/{quote_plus(name)}?hash={get_hash(log_msg)}"
+            dreamx_download = f"{URL}{log_msg.id}/{quote_plus(name)}?hash={get_hash(log_msg)}"
+        except Exception as e:
+            logger.exception(e)
+            await client.send_message(
+                query.from_user.id,
+                f"⚠️ Stream link generate nahi ho paya.\n\n<code>{e}</code>\n\nAdmin: BIN_CHANNEL check karo (bot admin hona chahiye).",
+                parse_mode=enums.ParseMode.HTML
             )
+            return
+        # 1) Give the user their buttons first - this is what they clicked for.
+        dreamcinezone = None
+        try:
             dreamcinezone = await query.edit_message_reply_markup(
                 reply_markup=InlineKeyboardMarkup([
                     [
@@ -1440,13 +1454,40 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     ]
                 ])
             )
-            await asyncio.sleep(DELETE_TIME)
-            await dreamcinezone.delete()
-            return
+        except MessageNotModified:
+            pass
         except Exception as e:
-            print(e)
-            await query.answer(f"⚠️ SOMETHING WENT WRONG STREAM LINK  \n\n{e}", show_alert=True)
-            return
+            logger.exception(e)
+            # buttons could not be edited -> send the links as a fresh message
+            try:
+                dreamcinezone = await client.send_message(
+                    query.from_user.id,
+                    "🔗 ʏᴏᴜʀ ʟɪɴᴋꜱ ᴀʀᴇ ʀᴇᴀᴅʏ",
+                    reply_markup=InlineKeyboardMarkup([[
+                        InlineKeyboardButton("🚀 Download ", url=dreamx_download),
+                        InlineKeyboardButton('▶️ ᴡᴀᴛᴄʜ', url=dreamx_stream)
+                    ]])
+                )
+            except Exception as e2:
+                logger.exception(e2)
+        # 2) Log message in BIN_CHANNEL is optional - never let it break the user flow.
+        try:
+            await log_msg.reply_text(
+                text=f"•• ʟɪɴᴋ ɢᴇɴᴇʀᴀᴛᴇᴅ ꜰᴏʀ ɪᴅ #{user_id} \n•• ᴜꜱᴇʀɴᴀᴍᴇ : {username} \n\n•• ᖴᎥᒪᗴ Nᗩᗰᗴ : {name}",
+                quote=True,
+                disable_web_page_preview=True,
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🚀 ꜰᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ", url=dreamx_download),
+                                                    InlineKeyboardButton('▶️ ᴡᴀᴛᴄʜ ᴏɴʟɪɴᴇ', url=dreamx_stream)]])
+            )
+        except Exception as e:
+            logger.exception(e)
+        if dreamcinezone:
+            await asyncio.sleep(DELETE_TIME)
+            try:
+                await dreamcinezone.delete()
+            except Exception:
+                pass
+        return
 
 
     elif query.data == "prestream":
@@ -1786,7 +1827,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
             btn = await group_setting_buttons(int(grp_id))
             reply_markup = InlineKeyboardMarkup(btn)
             await query.message.edit_reply_markup(reply_markup)
-    await query.answer(MSG_ALRT)
+    try:
+        await query.answer(MSG_ALRT)
+    except Exception:
+        pass
 
 
 async def auto_filter(client, msg, spoll=False):
