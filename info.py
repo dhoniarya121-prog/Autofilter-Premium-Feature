@@ -145,7 +145,7 @@ TRENDING_PREMIUM_ONLY = is_enabled(environ.get('TRENDING_PREMIUM_ONLY', "True"),
 ULTRA_FAST_MODE = is_enabled(environ.get('ULTRA_FAST_MODE', "True"), True) # Set to True for fast search, False for original search
 
 MAX_B_TN = environ.get("MAX_B_TN", "5") # Maximum number of buttons in a row (default: 5)
-PORT = int(environ.get("PORT", "8080"))  # Port for the web server (default: 8080)
+PORT = int(environ.get("PORT", "10000"))  # Port for the web server (default: 8080)
 MSG_ALRT = environ.get('MSG_ALRT', 'Share & Support Us ♥️') # Alert message for users
 DELETE_TIME = int(environ.get("DELETE_TIME", "300"))  #  deletion time in seconds (default: 5 minutes). Adjust as per your needs.
 CUSTOM_FILE_CAPTION = environ.get("CUSTOM_FILE_CAPTION", f"{script.CAPTION}")   # Custom caption for files
@@ -225,30 +225,21 @@ if getenv('FQDN'):
     FQDN = str(getenv('FQDN'))
 elif ON_RENDER and getenv('RENDER_EXTERNAL_HOSTNAME'):
     FQDN = str(getenv('RENDER_EXTERNAL_HOSTNAME'))
-elif ON_HEROKU:
+elif ON_HEROKU and APP_NAME:
     FQDN = APP_NAME + '.herokuapp.com'
 else:
     FQDN = BIND_ADRESS
-URL = "https://{}/".format(FQDN) if ON_HEROKU or NO_PORT else "https://{}/".format(FQDN, PORT)
 SLEEP_THRESHOLD = int(environ.get('SLEEP_THRESHOLD', '60'))
 WORKERS = int(environ.get('WORKERS', '4'))
 SESSION_NAME = str(environ.get('SESSION_NAME', 'dreamXBotz'))
 MULTI_CLIENT = False
 name = str(environ.get('name', 'DREAMXBOTZ'))
 PING_INTERVAL = int(environ.get("PING_INTERVAL", "600"))  # 10 minutes (Render free sleeps after 15 min idle)
-if 'DYNO' in environ:
-    ON_HEROKU = True
-    APP_NAME = str(getenv('APP_NAME'))
-else:
-    ON_HEROKU = False
 HAS_SSL = is_enabled(str(getenv('HAS_SSL', True)), True)
-_scheme = "https" if HAS_SSL else "http"
-if ON_HEROKU or NO_PORT or PORT in (80, 443):
-    URL = "{}://{}/".format(_scheme, FQDN)
+if HAS_SSL:
+    URL = "https://{}/".format(FQDN)
 else:
-    # self-hosted / VPS: the port must be part of the public link, otherwise
-    # every stream/download link points at the wrong port and fails
-    URL = "{}://{}:{}/".format(_scheme, FQDN, PORT)
+    URL = "http://{}/".format(FQDN)
 
 # ============================
 # Reactions Configuration
